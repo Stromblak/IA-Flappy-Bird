@@ -3,6 +3,8 @@ import random
 import sys
 import pygame
 from pygame.locals import *
+from red import *
+
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -184,7 +186,7 @@ def showWelcomeAnimation():
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-
+# cosa principal
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']
@@ -268,8 +270,14 @@ def mainGame(movementInfo):
 		if playerRot > -90:
 			playerRot -= playerVelRot
 
-		# IA	---------------------------------------
-		# playerFlapped = FUNCION()
+		# ------------ RED NEURONAL -----------------------
+		playerFlapped = red(playerFlapped, 
+							zip(upperPipes, lowerPipes),
+							playerx,
+							playery,	
+							playerVelY
+						)
+
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
@@ -289,10 +297,10 @@ def mainGame(movementInfo):
 			lPipe['x'] += pipeVelX
 			
 
-		# movimiento pipes	----------------------------------------------------------
+		# movimiento tuberias	----------------------------------------------------------
 		movimiento = True
 		if movimiento:
-			if not ciclo % 30:
+			if not ciclo % FPS:
 				delta = random.uniform(-1, 1)*pipeVelX/2
 			ciclo += 1
 
