@@ -3,7 +3,7 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from red import *
+from ia import *
 
 
 FPS = 30
@@ -271,7 +271,7 @@ def mainGame(movementInfo):
 			playerRot -= playerVelRot
 
 		# ------------ RED NEURONAL -----------------------
-		playerFlapped = red(playerFlapped, 
+		playerFlapped = ia(playerFlapped, 
 							zip(upperPipes, lowerPipes),
 							playerx,
 							playery,	
