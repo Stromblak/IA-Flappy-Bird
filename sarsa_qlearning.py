@@ -49,3 +49,20 @@ def sarsa(state, prevAction, R, newState):
     Q[(S, prevAction)] = newQ
 
     return nextAction
+
+
+def qLearning(state, prevAction, R, newState):
+    S = hash(state)
+    St = hash(newState)
+
+    currentQ = Q.get((S, prevAction), 0.0)
+
+    nextAction = max([True, False], key=lambda a: Q.get((St, a), 0.0))
+
+    nextQ = Q.get((St, nextAction), 0.0)
+
+    newQ = currentQ + a * (R + g * nextQ - currentQ)
+
+    Q[(S, prevAction)] = newQ
+
+    return nextAction

@@ -1,19 +1,18 @@
 from red import *
-from sarsa import *
-from qlearning import *
+from sarsa_qlearning import *
+
 
 def ia(playerFlapped, tuberias, x, y, velCaida):
     tuberias = list(tuberias)
     print(len(tuberias))
-    
+
     print(x, y, velCaida)
-    
-	# opcion pa elegir
-	# red
 
-	# sarsa
+    # opcion pa elegir
+    # red
 
-	# qlearning
+    # sarsa
 
-    
+    # qlearning
+
     return playerFlapped

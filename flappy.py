@@ -4,7 +4,7 @@ import sys
 import pygame
 from pygame.locals import *
 from ia import *
-from sarsa import *
+from sarsa_qlearning import *
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -282,8 +282,8 @@ def mainGame(movementInfo):
 							playery,	
 							playerVelY
 						)
-        # SARSA
-		R=getR()
+        # SARSA/Q-Learning
+		R = getR()
 		prevAction = playerFlapped
 		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
 		nextAction = sarsa(state, prevAction, R, newState)
