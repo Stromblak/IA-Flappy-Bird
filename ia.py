@@ -3,19 +3,16 @@ from sarsa_qlearning import *
 
 
 def ia(playerFlapped, tuberias, x, y, velCaida):
-    tuberias = list(tuberias)
-    print(len(tuberias))
+	# opcion pa elegir
+	# red
+	red(tuberias, y, velCaida)
 
-    print(x, y, velCaida)
 
-    # opcion pa elegir
-    # red
+	# sarsa
 
-    # sarsa
+	# qlearning
 
-    # qlearning
-
-    return playerFlapped
+	return playerFlapped
 
 
 saltar = False
