@@ -241,6 +241,28 @@ def mainGame(movementInfo):
 					playerVelY = playerFlapAcc
 					playerFlapped = True
 					SOUNDS['wing'].play()
+		
+
+		# ---------------------------- IA ------------------------------
+		if(ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY))
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+				SOUNDS['wing'].play()
+			
+		"""
+		# SARSA/Q-Learning
+		R = getR()
+		prevAction = playerFlapped
+		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+		nextAction = sarsa(state, prevAction, R, newState)
+
+		# Actualizar con nuevos datos
+		state = newState
+		prevAction = nextAction
+		playerFlapped = nextAction
+		"""
+
 
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
@@ -274,26 +296,6 @@ def mainGame(movementInfo):
 		# rotate the player
 		if playerRot > -90:
 			playerRot -= playerVelRot
-
-		# ------------ IA -----------------------
-		playerFlapped = ia(playerFlapped, 
-							zip(upperPipes, lowerPipes),
-							playerx,
-							playery,	
-							playerVelY
-						)
-		"""
-		# SARSA/Q-Learning
-		R = getR()
-		prevAction = playerFlapped
-		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-		nextAction = sarsa(state, prevAction, R, newState)
-
-		# Actualizar con nuevos datos
-		state = newState
-		prevAction = nextAction
-		playerFlapped = nextAction
-		"""
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:

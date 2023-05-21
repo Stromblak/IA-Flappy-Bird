@@ -3,6 +3,7 @@ import random
 import sys
 import pygame
 from pygame.locals import *
+from red import *
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -131,7 +132,7 @@ def main2():
 
 
 # cosa principal
-def mainGame():
+def mainGame(pesos1, pesos2, pesos3):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = cycle([0, 1, 2, 1])
 	playerx = int(SCREENWIDTH * 0.2)
@@ -183,6 +184,12 @@ def mainGame():
 					playerFlapped = True
 					SOUNDS['wing'].play()
 
+		if(red(zip(upperPipes, lowerPipes), playery, playerAccY, pesos1, pesos2, pesos3)):
+			if playery > -2 * IMAGES['player'][0].get_height():
+					playerVelY = playerFlapAcc
+					playerFlapped = True
+					SOUNDS['wing'].play()	
+
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
@@ -215,8 +222,6 @@ def mainGame():
 		# rotate the player
 		if playerRot > -90:
 			playerRot -= playerVelRot
-
-		
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
