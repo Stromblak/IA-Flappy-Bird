@@ -4,7 +4,7 @@ import sys
 import pygame
 from pygame.locals import *
 from ia import *
-
+from sarsa import *
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -226,6 +226,11 @@ def mainGame(movementInfo):
 	playerFlapped = False # True when player flaps
 
 	ciclo = 0
+
+	# Inicializar SARSA, necesito estado y la accion
+	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+	prevAction = playerFlapped
+
 	while True:
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -277,6 +282,16 @@ def mainGame(movementInfo):
 							playery,	
 							playerVelY
 						)
+        # SARSA
+		R=getR()
+		prevAction = playerFlapped
+		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+		nextAction = sarsa(state, prevAction, R, newState)
+
+    	# Actualizar con nuevos datos
+		state = newState
+		prevAction = nextAction
+		playerFlapped = nextAction
 
 
 		# player's movement
