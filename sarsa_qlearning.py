@@ -9,7 +9,7 @@ e = 0.3  # epsilon: para e-greedy
 
 
 def getR():
-    return -100
+    return 2.0
 
 
 def getState(playery, playerx, playerVelY, upperPipes, lowerPipes):

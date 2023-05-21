@@ -3,22 +3,21 @@ from sarsa_qlearning import *
 
 
 def ia(playerFlapped, tuberias, x, y, velCaida):
-	# opcion pa elegir
-	# red
-	red(tuberias, y, velCaida)
+    # opcion pa elegir
+    # red
+    red(tuberias, y, velCaida)
 
+    # sarsa
 
-	# sarsa
+    # qlearning
 
-	# qlearning
-
-	return playerFlapped
+    return playerFlapped
 
 
 saltar = False
-def _modSaltar(prevAction):
-    global saltar
-    saltar = prevAction
+state = None
+prevAction = None
+
 
 def algoritmos(
     sarsaOqlearning,
@@ -27,13 +26,12 @@ def algoritmos(
     playerVelY,
     upperPipes,
     lowerPipes,
-    prevAction,
-    state,
 ):
+    global saltar, state, prevAction
     # SARSA
     if sarsaOqlearning:
         # ejecutar A
-        _modSaltar(prevAction)
+        saltar = prevAction
         # observar R, S'
         R = getR()
         newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
@@ -54,7 +52,7 @@ def algoritmos(
         prevAction = egreedy(state)
 
         # ejecutar A
-        _modSaltar(prevAction)
+        saltar = prevAction
 
         # observar R, S'
         R = getR()

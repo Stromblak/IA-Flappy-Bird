@@ -228,6 +228,7 @@ def mainGame(movementInfo):
 	ciclo = 0
 	
 	sarsaOqlearning = 1
+	global saltar, state, prevAction
 	# Inicializar SARSA/Q-Learning con S
 	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
@@ -252,21 +253,14 @@ def mainGame(movementInfo):
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 				SOUNDS['wing'].play()
+		
+		# Movimiento IA
+		if (saltar):
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+				SOUNDS['wing'].play()
 			
-		"""
-		# SARSA/Q-Learning
-		R = getR()
-		prevAction = playerFlapped
-		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-		nextAction = sarsa(state, prevAction, R, newState)
-
-		# Actualizar con nuevos datos
-		state = newState
-		prevAction = nextAction
-		playerFlapped = nextAction
-		"""
-
-
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
@@ -307,14 +301,8 @@ def mainGame(movementInfo):
 							playery,	
 							playerVelY
 						)
-		# Movimiento IA
-		if (saltar):
-			if playery > -2 * IMAGES['player'][0].get_height():
-				playerVelY = playerFlapAcc
-				playerFlapped = True
-				SOUNDS['wing'].play()
 
-		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes,prevAction ,state)
+		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
