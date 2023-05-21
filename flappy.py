@@ -230,7 +230,7 @@ def mainGame(movementInfo):
 	# Inicializar SARSA, necesito estado y la accion
 	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
 	prevAction = playerFlapped
-
+	
 	while True:
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):

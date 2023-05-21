@@ -23,7 +23,7 @@ def hash(state):
     return state_hash
 
 
-def sarsa(state, prevAction, R, newState):
+def sarsa(state, prevAction, newState):
     # hash para que se pueda ocupar en un diccionario
     S = hash(state)
     St = hash(newState)
@@ -42,6 +42,7 @@ def sarsa(state, prevAction, R, newState):
     # Q con estado nuevo y siguiente accion
     nextQ = Q.get((St, nextAction), 0.0)
 
+    R = getR()
     # Calcular el nuevo valor Q para el estado actual y la accion anterior (formula)
     newQ = currentQ + a * (R + g * nextQ - currentQ)
 
@@ -51,16 +52,21 @@ def sarsa(state, prevAction, R, newState):
     return nextAction
 
 
-def qLearning(state, prevAction, R, newState):
+def qLearning(state, prevAction, newState):
     S = hash(state)
     St = hash(newState)
 
     currentQ = Q.get((S, prevAction), 0.0)
 
-    nextAction = max([True, False], key=lambda a: Q.get((St, a), 0.0))
+    if random.random() < e:
+        nextAction = random.choice([True, False])
+    else:
+        nextAction = max([True, False], key=lambda a: Q.get((St, a), 0.0))
 
     nextQ = Q.get((St, nextAction), 0.0)
 
+    R = getR()
+    
     newQ = currentQ + a * (R + g * nextQ - currentQ)
 
     Q[(S, prevAction)] = newQ
