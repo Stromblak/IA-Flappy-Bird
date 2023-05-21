@@ -14,6 +14,9 @@ def red(tuberias, y, velCaida, pesos1, pesos2, pesos3):
 		tubs += 1
 		if tubs == 2:
 			break
+	
+	if len(entrada) == 5:
+		entrada.extend( [0, 0, 0] )
 
 	entrada = np.array(entrada)
 	capa1 = np.zeros(CAPA1, dtype=float)
@@ -26,8 +29,9 @@ def red(tuberias, y, velCaida, pesos1, pesos2, pesos3):
 		capa2[i] = np.dot(capa1, pesos2[i])
 
 	salida = np.dot(capa2, pesos3)
-
-	if salida > 1:
+	# print(salida)
+	
+	if salida > 1500:
 		return True
 	else:
 		return False

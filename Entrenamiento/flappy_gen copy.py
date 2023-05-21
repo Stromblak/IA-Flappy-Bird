@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *
 from red import *
 
+VELOCIDAD = 1
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -133,13 +134,11 @@ def main2():
 
 
 # cosa principal
-def mainGame(pajaros, pesos1, pesos2, pesos3):
+def mainGame(pesos1, pesos2, pesos3):
 	score = playerIndex = loopIter = 0
-
-	score = [0 for i in range(pajaros)]
 	playerIndexGen = cycle([0, 1, 2, 1])
-	playerx = [ int(SCREENWIDTH * 0.2) for i in range(pajaros)]
-	playery = [ int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2) for i in range(pajaros)]
+	playerx = int(SCREENWIDTH * 0.2)
+	playery = int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2)
 
 	basex = 0
 	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
@@ -164,71 +163,84 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 	pipeVelX = -128 * dt
 
 	# player velocity, max velocity, downward acceleration, acceleration on flap
-	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
+	playerVelY    =  -9   # player's velocity along Y, default same as playerFlapped
 	playerMaxVelY =  10   # max vel along Y, max descend speed
 	playerMinVelY =  -8   # min vel along Y, max ascend speed
-	playerAccY    =  1   # players downward acceleration
-	playerRot     =  [45 for i in range(pajaros)]   # player's rotation
-	playerVelRot  =  3   # angular speed
+	playerAccY    =   1   # players downward acceleration
+	playerRot     =  45   # player's rotation
+	playerVelRot  =   3   # angular speed
 	playerRotThr  =  20   # rotation threshold
 	playerFlapAcc =  -9   # players speed on flapping
-	playerFlapped = [False for i in range(pajaros)] # True when player flaps
-	restantes     = [i for i in range(pajaros)]
+	playerFlapped = False # True when player flaps
 
+	ciclo = 0
+	
 	while True:
-		for i in restantes:
-			if(red(zip(upperPipes, lowerPipes), playery[i], playerAccY, pesos1[i], pesos2[i], pesos3[i])):
-				if playery[i] > -2 * IMAGES['player'][0].get_height():
-						playerVelY[i] = playerFlapAcc
-						playerFlapped[i] = True
-						SOUNDS['wing'].play()	
+		for event in pygame.event.get():
+			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+				pygame.quit()
+				sys.exit()
+			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+				if playery > -2 * IMAGES['player'][0].get_height():
+					playerVelY = playerFlapAcc
+					playerFlapped = True
+					SOUNDS['wing'].play()
 
-			# check for crash here
-			crashTest = checkCrash({'x': playerx[i], 'y': playery[i], 'index': playerIndex},
-								upperPipes, lowerPipes)
-		
-			if crashTest[0]:
-				restantes.remove(i)
+		if(red(zip(upperPipes, lowerPipes), playery, playerAccY, pesos1, pesos2, pesos3)):
+			if playery > -2 * IMAGES['player'][0].get_height():
+					playerVelY = playerFlapAcc
+					playerFlapped = True
+					SOUNDS['wing'].play()	
 
-				if not len(restantes):
-					return score
+		# check for crash here
+		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
+							upperPipes, lowerPipes)
+		if crashTest[0]:
+			return {
+				'y': playery,
+				'groundCrash': crashTest[1],
+				'basex': basex,
+				'upperPipes': upperPipes,
+				'lowerPipes': lowerPipes,
+				'score': score,
+				'playerVelY': playerVelY,
+				'playerRot': playerRot
+			}
 
+		# check for score
+		playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
+		for pipe in upperPipes:
+			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
+			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+				score += 1
+				SOUNDS['point'].play()
 
-			# check for score
-			playerMidPos = playerx[i] + IMAGES['player'][0].get_width() / 2
-			for pipe in upperPipes:
-				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-					score[i] += 1
-					SOUNDS['point'].play()
-
-			# rotate the player
-			if playerRot[i] > -90:
-				playerRot[i] -= playerVelRot
-
-			# player's movement
-			if playerVelY[i] < playerMaxVelY and not playerFlapped[i]:
-				playerVelY[i] += playerAccY
-			if playerFlapped[i]:
-				playerFlapped[i] = False
-
-			# more rotation to cover the threshold (calculated in visible rotation)
-			playerRot[i] = 45
-
-			playerHeight = IMAGES['player'][playerIndex].get_height()
-			playery[i] += min(playerVelY[i], BASEY - playery[i] - playerHeight)
-
-		
 		# playerIndex basex change
 		if (loopIter + 1) % 3 == 0:
 			playerIndex = next(playerIndexGen)
 		loopIter = (loopIter + 1) % 30
 		basex = -((-basex + 100) % baseShift)
 
+		# rotate the player
+		if playerRot > -90:
+			playerRot -= playerVelRot*VELOCIDAD
+
+		# player's movement
+		if playerVelY < playerMaxVelY*VELOCIDAD and not playerFlapped:
+			playerVelY += playerAccY*VELOCIDAD
+		if playerFlapped:
+			playerFlapped = False
+
+			# more rotation to cover the threshold (calculated in visible rotation)
+			playerRot = 45
+
+		playerHeight = IMAGES['player'][playerIndex].get_height()
+		playery += min(playerVelY*VELOCIDAD, BASEY - playery - playerHeight)
+
 		# move pipes to left
 		for uPipe, lPipe in zip(upperPipes, lowerPipes):
-			uPipe['x'] += pipeVelX
-			lPipe['x'] += pipeVelX
+			uPipe['x'] += pipeVelX*VELOCIDAD
+			lPipe['x'] += pipeVelX*VELOCIDAD
 			
 
 		# movimiento tuberias	----------------------------------------------------------
@@ -269,16 +281,15 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 
 		SCREEN.blit(IMAGES['base'], (basex, BASEY))
 		# print score so player overlaps the score
+		showScore(score)
 
 		# Player rotation has a threshold
 		visibleRot = playerRotThr
-		if playerRot[i] <= playerRotThr:
-			visibleRot = playerRot[i]
+		if playerRot <= playerRotThr:
+			visibleRot = playerRot
 		
 		playerSurface = pygame.transform.rotate(IMAGES['player'][playerIndex], visibleRot)
-
-		for i in restantes:
-			SCREEN.blit(playerSurface, (playerx[i], playery[i]))
+		SCREEN.blit(playerSurface, (playerx, playery))
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
@@ -310,6 +321,21 @@ def getRandomPipe():
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
 	]
+
+
+def showScore(score):
+	"""displays score in center of screen"""
+	scoreDigits = [int(x) for x in list(str(score))]
+	totalWidth = 0 # total width of all numbers to be printed
+
+	for digit in scoreDigits:
+		totalWidth += IMAGES['numbers'][digit].get_width()
+
+	Xoffset = (SCREENWIDTH - totalWidth) / 2
+
+	for digit in scoreDigits:
+		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
+		Xoffset += IMAGES['numbers'][digit].get_width()
 
 
 def checkCrash(player, upperPipes, lowerPipes):
