@@ -244,7 +244,7 @@ def mainGame(movementInfo):
 		
 
 		# ---------------------------- IA ------------------------------
-		if(ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY))
+		if(ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY)):
 			if playery > -2 * IMAGES['player'][0].get_height():
 				playerVelY = playerFlapAcc
 				playerFlapped = True
