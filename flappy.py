@@ -226,11 +226,14 @@ def mainGame(movementInfo):
 	playerFlapped = False # True when player flaps
 
 	ciclo = 0
-
-	# Inicializar SARSA, necesito estado y la accion
-	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-	prevAction = playerFlapped
 	
+	sarsaOqlearning = 1
+	# Inicializar SARSA/Q-Learning con S
+	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
+	if sarsaOqlearning:
+		prevAction = egreedy(state)
+
 	while True:
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -282,17 +285,14 @@ def mainGame(movementInfo):
 							playery,	
 							playerVelY
 						)
-        # SARSA/Q-Learning
-		R = getR()
-		prevAction = playerFlapped
-		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-		nextAction = sarsa(state, prevAction, R, newState)
+		# Movimiento IA
+		if (saltar):
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+				SOUNDS['wing'].play()
 
-    	# Actualizar con nuevos datos
-		state = newState
-		prevAction = nextAction
-		playerFlapped = nextAction
-
+		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes,prevAction ,state)
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
