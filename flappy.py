@@ -226,11 +226,15 @@ def mainGame(movementInfo):
 	playerFlapped = False # True when player flaps
 
 	ciclo = 0
-
-	# Inicializar SARSA, necesito estado y la accion
-	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-	prevAction = playerFlapped
 	
+	sarsaOqlearning = 1
+	global saltar, state, prevAction
+	# Inicializar SARSA/Q-Learning con S
+	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
+	if sarsaOqlearning:
+		prevAction = egreedy(state)
+
 	while True:
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -249,21 +253,14 @@ def mainGame(movementInfo):
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 				SOUNDS['wing'].play()
+		
+		# Movimiento IA
+		if (saltar):
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+				SOUNDS['wing'].play()
 			
-		"""
-		# SARSA/Q-Learning
-		R = getR()
-		prevAction = playerFlapped
-		newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-		nextAction = sarsa(state, prevAction, R, newState)
-
-		# Actualizar con nuevos datos
-		state = newState
-		prevAction = nextAction
-		playerFlapped = nextAction
-		"""
-
-
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
@@ -296,6 +293,16 @@ def mainGame(movementInfo):
 		# rotate the player
 		if playerRot > -90:
 			playerRot -= playerVelRot
+
+		# ------------ RED NEURONAL -----------------------
+		playerFlapped = ia(playerFlapped, 
+							zip(upperPipes, lowerPipes),
+							playerx,
+							playery,	
+							playerVelY
+						)
+
+		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:

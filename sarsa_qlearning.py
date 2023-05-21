@@ -1,6 +1,7 @@
 import random
 import hashlib
 
+
 Q = {}  # Diccionario para almacenar los valores Q
 a = 0.5  # alfa: Tasa de aprendizaje
 g = 0.9  # gamma: Factor de descuento
@@ -8,12 +9,24 @@ e = 0.3  # epsilon: para e-greedy
 
 
 def getR():
-    return 1.0
+    return 2.0
 
 
 def getState(playery, playerx, playerVelY, upperPipes, lowerPipes):
     state = (playery, playerx, playerVelY, tuple(upperPipes), tuple(lowerPipes))
     return state
+
+
+def egreedy(state):
+    S = hash(state)
+    if random.random() < e:
+        # Exploracion: seleccionar una accion aleatoria
+        A = random.choice([True, False])
+    else:
+        # Explotacion: seleccionar la accion con el valor Q maximo
+        A = max([True, False], key=lambda a: Q.get((S, a), 0.0))
+
+    return A
 
 
 def hash(state):
@@ -23,52 +36,32 @@ def hash(state):
     return state_hash
 
 
-def sarsa(state, prevAction, newState):
+def sarsa(state, prevAction, nextAction, R, newState):
     # hash para que se pueda ocupar en un diccionario
     S = hash(state)
-    St = hash(newState)
+    S2 = hash(newState)
 
     # Q con estado actual y accion anterior
     currentQ = Q.get((S, prevAction), 0.0)
 
-    # Elegir siguiente accion con estado newState de Q
-    if random.random() < e:
-        # Exploracion: seleccionar una accion aleatoria
-        nextAction = random.choice([True, False])
-    else:
-        # Explotacion: seleccionar la accion con el valor Q maximo
-        nextAction = max([True, False], key=lambda a: Q.get((St, a), 0.0))
-
     # Q con estado nuevo y siguiente accion
-    nextQ = Q.get((St, nextAction), 0.0)
+    nextQ = Q.get((S2, nextAction), 0.0)
 
-    R = getR()
     # Calcular el nuevo valor Q para el estado actual y la accion anterior (formula)
     newQ = currentQ + a * (R + g * nextQ - currentQ)
 
     # Actualizar el diccionario Q con el nuevo valor Q
     Q[(S, prevAction)] = newQ
 
-    return nextAction
 
-
-def qLearning(state, prevAction, newState):
+def qLearning(state, prevAction, R, newState):
     S = hash(state)
-    St = hash(newState)
-
+    S2 = hash(newState)
     currentQ = Q.get((S, prevAction), 0.0)
 
-    if random.random() < e:
-        nextAction = random.choice([True, False])
-    else:
-        nextAction = max([True, False], key=lambda a: Q.get((St, a), 0.0))
+    # implementar max alfa A, algo ???
+    nextQ = Q.get((S2, a), 0.0)
 
-    nextQ = Q.get((St, nextAction), 0.0)
-
-    R = getR()
-    
     newQ = currentQ + a * (R + g * nextQ - currentQ)
 
     Q[(S, prevAction)] = newQ
-
-    return nextAction
