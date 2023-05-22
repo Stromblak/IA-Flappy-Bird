@@ -124,11 +124,48 @@ def main2():
 	)
 
 
+	"""Shows welcome screen animation of flappy bird"""
+	# index of player to blit on screen
+	playerIndex = 0
+	playerIndexGen = cycle([0, 1, 2, 1])
+	# iterator used to change playerIndex after every 5th iteration
+	loopIter = 0
+
+	playerx = int(SCREENWIDTH * 0.2)
+	playery = int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2)
+
+	messagex = int((SCREENWIDTH - IMAGES['message'].get_width()) / 2)
+	messagey = int(SCREENHEIGHT * 0.12)
+
+	basex = 0
+	# amount by which base can maximum shift to left
+	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
+
+	# player shm for up-down motion on welcome screen
+	playerShmVals = {'val': 0, 'dir': 1}
+
+	# adjust playery, playerIndex, basex
+	if (loopIter + 1) % 5 == 0:
+		playerIndex = next(playerIndexGen)
+	loopIter = (loopIter + 1) % 30
+	basex = -((-basex + 4) % baseShift)
+	playerShm(playerShmVals)
+
+	# draw sprites
+	SCREEN.blit(IMAGES['background'], (0,0))
+	SCREEN.blit(IMAGES['player'][playerIndex],
+				(playerx, playery + playerShmVals['val']))
+	SCREEN.blit(IMAGES['message'], (messagex, messagey))
+	SCREEN.blit(IMAGES['base'], (basex, BASEY))
+
+	pygame.display.update()
+	FPSCLOCK.tick(FPS)
+
+
 # cosa principal
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
 
-	score = [0 for i in range(pajaros)]
 	playerIndexGen = cycle([0, 1, 2, 1])
 	playerx = [ int(SCREENWIDTH * 0.2) for i in range(pajaros)]
 	playery = [ int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2) for i in range(pajaros)]
@@ -165,7 +202,9 @@ def mainGame(pajaros, listaPajaros):
 	playerRotThr  =  20   # rotation threshold
 	playerFlapAcc =  -9   # players speed on flapping
 	playerFlapped =  [False for i in range(pajaros)] # True when player flaps
+
 	restantes     =  [i for i in range(pajaros)]
+	fitness       =  [0 for i in range(pajaros)]
 
 	while True:
 		for i in restantes:
@@ -184,9 +223,9 @@ def mainGame(pajaros, listaPajaros):
 				restantes.remove(i)
 
 				if not len(restantes):
-					return score
+					return fitness
 
-			score[i] += 1
+			fitness[i] += 1
 
 			# rotate the player
 			if playerRot[i] > -90:
@@ -204,7 +243,14 @@ def mainGame(pajaros, listaPajaros):
 			playerHeight = IMAGES['player'][playerIndex].get_height()
 			playery[i] += min(playerVelY[i], BASEY - playery[i] - playerHeight)
 
-		
+
+		playerMidPos = playerx[restantes[0]] + IMAGES['player'][0].get_width() / 2
+		for pipe in upperPipes:
+			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
+			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+				score += 1
+				SOUNDS['point'].play()
+
 		# playerIndex basex change
 		if (loopIter + 1) % 3 == 0:
 			playerIndex = next(playerIndexGen)
@@ -255,6 +301,7 @@ def mainGame(pajaros, listaPajaros):
 
 		SCREEN.blit(IMAGES['base'], (basex, BASEY))
 		# print score so player overlaps the score
+		showScore(score)
 
 		# Player rotation has a threshold
 		visibleRot = playerRotThr
@@ -270,7 +317,19 @@ def mainGame(pajaros, listaPajaros):
 		FPSCLOCK.tick(FPS)
 
 
+def showScore(score):
+	"""displays score in center of screen"""
+	scoreDigits = [int(x) for x in list(str(score))]
+	totalWidth = 0 # total width of all numbers to be printed
 
+	for digit in scoreDigits:
+		totalWidth += IMAGES['numbers'][digit].get_width()
+
+	Xoffset = (SCREENWIDTH - totalWidth) / 2
+
+	for digit in scoreDigits:
+		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
+		Xoffset += IMAGES['numbers'][digit].get_width()
 
 def playerShm(playerShm):
 	"""oscillates the value of playerShm['val'] between 8 and -8"""
@@ -281,7 +340,6 @@ def playerShm(playerShm):
 		playerShm['val'] += 1
 	else:
 		playerShm['val'] -= 1
-
 
 def getRandomPipe():
 	"""returns a randomly generated pipe"""
@@ -295,7 +353,6 @@ def getRandomPipe():
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
 	]
-
 
 def checkCrash(player, upperPipes, lowerPipes):
 	"""returns True if player collides with base or pipes."""
