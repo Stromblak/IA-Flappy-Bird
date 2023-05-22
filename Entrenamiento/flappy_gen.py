@@ -133,7 +133,7 @@ def main2():
 
 
 # cosa principal
-def mainGame(pajaros, pesos1, pesos2, pesos3, sal):
+def mainGame(pajaros, pesos1, pesos2, sal):
 	score = playerIndex = loopIter = 0
 
 	score = [0 for i in range(pajaros)]
@@ -172,12 +172,13 @@ def mainGame(pajaros, pesos1, pesos2, pesos3, sal):
 	playerVelRot  =  3   # angular speed
 	playerRotThr  =  20   # rotation threshold
 	playerFlapAcc =  -9   # players speed on flapping
-	playerFlapped = [False for i in range(pajaros)] # True when player flaps
-	restantes     = [i for i in range(pajaros)]
+	playerFlapped =  [False for i in range(pajaros)] # True when player flaps
+	restantes     =  [i for i in range(pajaros)]
 
 	while True:
 		for i in restantes:
-			if(red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], pesos1[i], pesos2[i], pesos3[i], sal[i])):
+			# ia
+			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], pesos1[i], pesos2[i], sal[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 						playerVelY[i] = playerFlapAcc
 						playerFlapped[i] = True
@@ -193,16 +194,6 @@ def mainGame(pajaros, pesos1, pesos2, pesos3, sal):
 				if not len(restantes):
 					return score
 
-
-			# check for score
-			"""
-			playerMidPos = playerx[i] + IMAGES['player'][0].get_width() / 2
-			for pipe in upperPipes:
-				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-					score[i] += 1
-					SOUNDS['point'].play()
-			"""
 			score[i] += 1
 
 			# rotate the player
@@ -324,6 +315,10 @@ def checkCrash(player, upperPipes, lowerPipes):
 	# if player crashes into ground
 	if player['y'] + player['h'] >= BASEY - 1:
 		return [True, True]
+	
+	elif player['y'] + player['h'] <= -1:
+		return [True, True]
+	
 	else:
 
 		playerRect = pygame.Rect(player['x'], player['y'],
