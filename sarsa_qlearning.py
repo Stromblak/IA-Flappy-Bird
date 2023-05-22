@@ -1,39 +1,39 @@
 import random
 import hashlib
-from flappy import BASEY
+from flappy import SCREENHEIGHT
 
-Q = {}  # Diccionario para almacenar los valores Q
-a = 0.5  # alfa: Tasa de aprendizaje
-g = 0.9  # gamma: Factor de descuento
-e = 1  # epsilon: para e-greedy
+Q = {}  # Diccionario para almacenar los valores Q, guarda un par estado y accion (Q es el valor)
+a = 1  # alfa: Tasa de aprendizaje
+g = 0  # gamma: Factor de descuento
+e = 0.1  # epsilon: para e-greedy
 
 
-def getR(state, playerHeight):
-    if state[0] + playerHeight == BASEY // 2:
+def getR(state, action):
+    if state == SCREENHEIGHT / 2:
         reward = 0
-    elif state[0] + playerHeight > BASEY // 2:
+    elif state < SCREENHEIGHT / 2 and action:
         reward = -1
-    else:
+    elif state < SCREENHEIGHT / 2 and not action:
         reward = 1
+    elif state > SCREENHEIGHT / 2 and action:
+        reward = 1
+    elif state > SCREENHEIGHT / 2 and not action:
+        reward = -1
     return reward
 
 
 def getState(playery, playerx, playerVelY, upperPipes, lowerPipes):
-    state = (playery, playerx, playerVelY, tuple(upperPipes), tuple(lowerPipes))
+    state = playery
     return state
 
 
 def egreedy(state):
     S = hash(state)
     if random.random() < e:
-        # Exploracion: seleccionar una accion aleatoria
-        if random.random() < 0.95:  
-            A = False
-        else:
-            A = True
+        A = random.choice([True, False])
     else:
         # Explotacion: seleccionar la accion con el valor Q maximo
-        A = max([True, False], key=lambda a: Q.get((S, a), 0.0))
+        A = max([True, False], key=lambda action: Q.get((S, action), 0.0))
 
     return A
 

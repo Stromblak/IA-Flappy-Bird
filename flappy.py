@@ -6,7 +6,8 @@ from pygame.locals import *
 from ia import *
 from sarsa_qlearning import *
 
-FPS = 30
+sys.setrecursionlimit(10000)
+FPS = 600000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
@@ -156,6 +157,12 @@ def showWelcomeAnimation():
 	playerShmVals = {'val': 0, 'dir': 1}
 
 	while True:
+		#reinicio automatico
+		return {
+			'playery': playery + playerShmVals['val'],
+			'basex': basex,
+			'playerIndexGen': playerIndexGen,
+		}
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
@@ -228,7 +235,8 @@ def mainGame(movementInfo):
 	ciclo = 0
 	
 	sarsaOqlearning = 1
-	global saltar, state, prevAction
+	saltar=False
+	prevAction=False
 	# Inicializar SARSA/Q-Learning con S
 	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
@@ -244,18 +252,16 @@ def mainGame(movementInfo):
 				if playery > -2 * IMAGES['player'][0].get_height():
 					playerVelY = playerFlapAcc
 					playerFlapped = True
-					SOUNDS['wing'].play()
 		
 
 		# ---------------------------- IA ------------------------------
-		if ia(zip(upperPipes, lowerPipes), playerx, playery, playerVelY):
-			if playery > -2 * IMAGES['player'][0].get_height():
-				playerVelY = playerFlapAcc
-				playerFlapped = True
-				SOUNDS['wing'].play()
+		# if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY):
+		# 	if playery > -2 * IMAGES['player'][0].get_height():
+		# 		playerVelY = playerFlapAcc
+		# 		playerFlapped = True
+		# 		SOUNDS['wing'].play()
 		
-		# algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
-
+		
 			
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
@@ -308,6 +314,55 @@ def mainGame(movementInfo):
 			uPipe['x'] += pipeVelX
 			lPipe['x'] += pipeVelX
 			
+
+		# Movimiento IA
+		if (saltar):
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+
+		# if playery < SCREENHEIGHT / 2 :
+		# 	saltar=False
+		# else: 
+		# 	saltar=True
+	
+		# SARSA/Q-Learning
+		if sarsaOqlearning:
+        	# ejecutar A
+			saltar = prevAction
+			
+			# observar R, S'
+			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+			R = getR(newState,prevAction)
+
+			# elegir A' de un S' (con epsilon-greedy)
+			nextAction = egreedy(newState)
+
+			# aplicar formula Q
+			sarsa(state, prevAction, nextAction, R, newState)
+
+			# actualizar
+			state = newState
+			prevAction = nextAction
+
+		# Q-Learning
+		else:
+			# elegir A de un S (con epsilon-greedy)
+			prevAction = egreedy(state)
+
+			# ejecutar A
+			saltar = prevAction
+
+			# observar R, S'
+			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+			R = getR(newState, prevAction)
+
+			# aplicar formula Q
+			qLearning(state, prevAction, R, newState)
+
+			# actualizar
+			state = newState
+
 
 		# movimiento tuberias	----------------------------------------------------------
 		movimiento = False
@@ -382,6 +437,8 @@ def showGameOverScreen(crashInfo):
 		SOUNDS['die'].play()
 
 	while True:
+		# para que se reinicie automatico
+		main()
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
