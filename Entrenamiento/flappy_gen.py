@@ -48,12 +48,7 @@ PIPES_LIST = (
 	'../assets/sprites/pipe-red.png',
 )
 
-
-try:
-	xrange
-except NameError:
-	xrange = range
-
+xrange = range
 
 def main2():
 	global SCREEN, FPSCLOCK
@@ -127,9 +122,6 @@ def main2():
 		getHitmask(IMAGES['player'][1]),
 		getHitmask(IMAGES['player'][2]),
 	)
-
-
-
 
 
 # cosa principal
@@ -280,7 +272,6 @@ def mainGame(pajaros, pesos1, pesos2, sal):
 
 
 
-
 def playerShm(playerShm):
 	"""oscillates the value of playerShm['val'] between 8 and -8"""
 	if abs(playerShm['val']) == 8:
@@ -369,6 +360,3 @@ def getHitmask(image):
 		for y in xrange(image.get_height()):
 			mask[x].append(bool(image.get_at((x,y))[3]))
 	return mask
-
-if __name__ == '__main__':
-	main()
