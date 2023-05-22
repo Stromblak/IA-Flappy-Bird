@@ -1,41 +1,43 @@
 import numpy as np
+import math
+import random
 
-ENTRADA = 8
-CAPA1 = 4
-CAPA2 = 4
-PESOS1 = np.loadtxt("pesos.txt", dtype=float, max_rows=CAPA1)
-PESOS2 = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA1, max_rows=CAPA2)
-PESOS3 = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA1+CAPA2)
+ENTRADA = 3
+CAPA = 3
+PESOS1 = np.loadtxt("pesos.txt", dtype=float, max_rows=CAPA)
+PESOS2 = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA, max_rows=1)
+SALIDA = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA + 1)
 
-def red(tuberias, y, velCaida):
-	entrada = [y, velCaida] 
-	tubs = 0
+def red(tuberias, x, y, vely):
+	entrada = [ abs(vely) ]
 
-	# x, y-arriba, y-abajo
+	# siguiente tuberia
 	for uPipe, lPipe in tuberias:
-		entrada.extend( [uPipe["x"], uPipe["y"], lPipe["y"]] )
-		tubs += 1
-		if tubs == 2:
-			break
+		if uPipe["x"] <= x - 30:
+			continue
+		# entrada.extend( [-uPipe["x"], uPipe["y"], lPipe["y"]] )
+		tubArriba = [uPipe["x"], uPipe["y"]]
+		tubAbajo  = [lPipe["x"], lPipe["y"]]
+		pajaro    = [x, y]
+
+		entrada.extend( [math.dist(pajaro, tubArriba), math.dist(pajaro, tubAbajo)] )
+		break
 
 	entrada = np.array(entrada)
-	capa1 = np.zeros(CAPA1, dtype=float)
-	capa2 = np.zeros(CAPA2, dtype=float)
+	capa = np.zeros(CAPA, dtype=float)
 
-	for i in range(CAPA1):
-		capa1[i] = np.dot(entrada, PESOS1[i])
+	for i in range(CAPA):
+		capa[i] = np.dot(entrada, PESOS1[i])
 	
-	for i in range(CAPA2):
-		capa2[i] = np.dot(capa1, PESOS2[i])
+	salida = np.dot(capa, PESOS2)
 
-	salida = np.dot(capa2, PESOS3)
-
-	if salida > 1:
+	if not random.randint(1, 100):
+		print(salida)
+	
+	if salida > SALIDA:
 		return True
 	else:
 		return False
-
-
 
 
 

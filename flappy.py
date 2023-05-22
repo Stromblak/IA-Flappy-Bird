@@ -248,13 +248,13 @@ def mainGame(movementInfo):
 		
 
 		# ---------------------------- IA ------------------------------
-		if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY) and 0:
+		if ia(zip(upperPipes, lowerPipes), playerx, playery, playerVelY):
 			if playery > -2 * IMAGES['player'][0].get_height():
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 				SOUNDS['wing'].play()
 		
-		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
+		# algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
 
 			
 		# check for crash here

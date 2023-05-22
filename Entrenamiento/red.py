@@ -10,7 +10,7 @@ def red(tuberias, x, y, vely, pesos1, pesos2, sal):
 
 	# siguiente tuberia
 	for uPipe, lPipe in tuberias:
-		if uPipe["x"] <= x/2:
+		if uPipe["x"] <= x - 30:
 			continue
 		# entrada.extend( [-uPipe["x"], uPipe["y"], lPipe["y"]] )
 		tubArriba = [uPipe["x"], uPipe["y"]]
