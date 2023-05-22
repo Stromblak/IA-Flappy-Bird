@@ -6,7 +6,8 @@ from pygame.locals import *
 from ia import *
 from sarsa_qlearning import *
 
-FPS = 60
+sys.setrecursionlimit(10000)
+FPS = 600000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
@@ -157,7 +158,6 @@ def showWelcomeAnimation():
 
 	while True:
 		#reinicio automatico
-		SOUNDS['wing'].play()
 		return {
 			'playery': playery + playerShmVals['val'],
 			'basex': basex,
@@ -236,6 +236,7 @@ def mainGame(movementInfo):
 	
 	sarsaOqlearning = 1
 	saltar=False
+	prevAction=False
 	# Inicializar SARSA/Q-Learning con S
 	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
@@ -251,7 +252,6 @@ def mainGame(movementInfo):
 				if playery > -2 * IMAGES['player'][0].get_height():
 					playerVelY = playerFlapAcc
 					playerFlapped = True
-					SOUNDS['wing'].play()
 		
 
 		# ---------------------------- IA ------------------------------
@@ -261,12 +261,7 @@ def mainGame(movementInfo):
 		# 		playerFlapped = True
 		# 		SOUNDS['wing'].play()
 		
-		# Movimiento IA
-		if (saltar):
-			if playery > -2 * IMAGES['player'][0].get_height():
-				playerVelY = playerFlapAcc
-				playerFlapped = True
-				SOUNDS['wing'].play()
+		
 			
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
@@ -328,6 +323,17 @@ def mainGame(movementInfo):
 			lPipe['x'] += pipeVelX
 			
 
+		# Movimiento IA
+		if (saltar):
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
+
+		# if playery < SCREENHEIGHT / 2 :
+		# 	saltar=False
+		# else: 
+		# 	saltar=True
+	
 		# SARSA/Q-Learning
 		if sarsaOqlearning:
         	# ejecutar A
@@ -335,7 +341,7 @@ def mainGame(movementInfo):
 			
 			# observar R, S'
 			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-			R = getR(newState,playerHeight)
+			R = getR(newState,prevAction)
 
 			# elegir A' de un S' (con epsilon-greedy)
 			nextAction = egreedy(newState)
@@ -357,7 +363,7 @@ def mainGame(movementInfo):
 
 			# observar R, S'
 			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
-			R = getR(newState,playerHeight)
+			R = getR(newState, prevAction)
 
 			# aplicar formula Q
 			qLearning(state, prevAction, R, newState)
