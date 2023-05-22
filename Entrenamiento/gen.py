@@ -4,12 +4,12 @@ import random
 import os
 import operator
 
-POBLACION = 50
+POBLACION = 15
 MUTACION = 5
-DELTA = 0.1
+DELTA = 0.05
 MINFITNESS = 2500
 HIJOS = 2
-USARPESOS = True
+USARPESOS = False
 
 
 class Pajaro:
@@ -111,7 +111,7 @@ def algGenetico():
 		
 		for i in range( int(HIJOS/2) ):
 			pajaros[POBLACION-1 - i  ].nuevo(pajaros[i], pajaros[i+1])
-			pajaros[POBLACION-1 - i-1].nuevo(pajaros[i], pajaros[i+1])		
+			pajaros[POBLACION-1 - i-1].nuevo(pajaros[i], pajaros[i+1])
 
 		# Mutacion y guardado de pesos
 		for i in range(POBLACION):

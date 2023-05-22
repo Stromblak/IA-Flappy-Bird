@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *
 from red import *
 
+SONIDO = False
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -207,12 +208,25 @@ def mainGame(pajaros, listaPajaros):
 	fitness       =  [0 for i in range(pajaros)]
 
 	while True:
+		for event in pygame.event.get():
+			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+				pygame.quit()
+				sys.exit()
+			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+				if playery > -2 * IMAGES['player'][0].get_height():
+					playerVelY = playerFlapAcc
+					playerFlapped = True
+					if SONIDO: 
+						SOUNDS['wing'].play()
+
+
 		for i in restantes:
 			# ia
 			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], listaPajaros[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
-						playerVelY[i] = playerFlapAcc
-						playerFlapped[i] = True
+					playerVelY[i] = playerFlapAcc
+					playerFlapped[i] = True
+					if SONIDO:
 						SOUNDS['wing'].play()	
 
 			# check for crash here
@@ -249,7 +263,8 @@ def mainGame(pajaros, listaPajaros):
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 				score += 1
-				SOUNDS['point'].play()
+				if SONIDO:
+					SOUNDS['point'].play()
 
 		# playerIndex basex change
 		if (loopIter + 1) % 3 == 0:
