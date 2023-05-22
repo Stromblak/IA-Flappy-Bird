@@ -1,15 +1,21 @@
 import random
 import hashlib
-
+from flappy import BASEY
 
 Q = {}  # Diccionario para almacenar los valores Q
 a = 0.5  # alfa: Tasa de aprendizaje
 g = 0.9  # gamma: Factor de descuento
-e = 0.3  # epsilon: para e-greedy
+e = 1  # epsilon: para e-greedy
 
 
-def getR():
-    return 2.0
+def getR(state, playerHeight):
+    if state[0] + playerHeight == BASEY // 2:
+        reward = 0
+    elif state[0] + playerHeight > BASEY // 2:
+        reward = -1
+    else:
+        reward = 1
+    return reward
 
 
 def getState(playery, playerx, playerVelY, upperPipes, lowerPipes):
@@ -21,7 +27,10 @@ def egreedy(state):
     S = hash(state)
     if random.random() < e:
         # Exploracion: seleccionar una accion aleatoria
-        A = random.choice([True, False])
+        if random.random() < 0.95:  
+            A = False
+        else:
+            A = True
     else:
         # Explotacion: seleccionar la accion con el valor Q maximo
         A = max([True, False], key=lambda a: Q.get((S, a), 0.0))
