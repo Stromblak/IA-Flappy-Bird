@@ -296,14 +296,6 @@ def mainGame(movementInfo):
 		if playerRot > -90:
 			playerRot -= playerVelRot
 
-		# ------------ RED NEURONAL -----------------------
-		# playerFlapped = ia(playerFlapped, 
-		# 					zip(upperPipes, lowerPipes),
-		# 					playerx,
-		# 					playery,	
-		# 					playerVelY
-		# 				)
-		
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
@@ -448,11 +440,9 @@ def showGameOverScreen(crashInfo):
 		# para que se reinicie automatico
 		main()
 		for event in pygame.event.get():
-			
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
 				sys.exit()
-			
 			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
 				if playery + playerHeight >= BASEY - 1:
 					return

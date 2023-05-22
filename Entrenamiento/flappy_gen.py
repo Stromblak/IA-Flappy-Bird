@@ -48,12 +48,7 @@ PIPES_LIST = (
 	'../assets/sprites/pipe-red.png',
 )
 
-
-try:
-	xrange
-except NameError:
-	xrange = range
-
+xrange = range
 
 def main2():
 	global SCREEN, FPSCLOCK
@@ -129,11 +124,8 @@ def main2():
 	)
 
 
-
-
-
 # cosa principal
-def mainGame(pajaros, pesos1, pesos2, pesos3):
+def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
 
 	score = [0 for i in range(pajaros)]
@@ -172,12 +164,13 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 	playerVelRot  =  3   # angular speed
 	playerRotThr  =  20   # rotation threshold
 	playerFlapAcc =  -9   # players speed on flapping
-	playerFlapped = [False for i in range(pajaros)] # True when player flaps
-	restantes     = [i for i in range(pajaros)]
+	playerFlapped =  [False for i in range(pajaros)] # True when player flaps
+	restantes     =  [i for i in range(pajaros)]
 
 	while True:
 		for i in restantes:
-			if(red(zip(upperPipes, lowerPipes), playery[i], playerAccY, pesos1[i], pesos2[i], pesos3[i])):
+			# ia
+			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], listaPajaros[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 						playerVelY[i] = playerFlapAcc
 						playerFlapped[i] = True
@@ -193,14 +186,7 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 				if not len(restantes):
 					return score
 
-
-			# check for score
-			playerMidPos = playerx[i] + IMAGES['player'][0].get_width() / 2
-			for pipe in upperPipes:
-				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-					score[i] += 1
-					SOUNDS['point'].play()
+			score[i] += 1
 
 			# rotate the player
 			if playerRot[i] > -90:
@@ -286,7 +272,6 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 
 
 
-
 def playerShm(playerShm):
 	"""oscillates the value of playerShm['val'] between 8 and -8"""
 	if abs(playerShm['val']) == 8:
@@ -321,6 +306,10 @@ def checkCrash(player, upperPipes, lowerPipes):
 	# if player crashes into ground
 	if player['y'] + player['h'] >= BASEY - 1:
 		return [True, True]
+	
+	elif player['y'] + player['h'] <= -1:
+		return [True, True]
+	
 	else:
 
 		playerRect = pygame.Rect(player['x'], player['y'],
@@ -371,6 +360,3 @@ def getHitmask(image):
 		for y in xrange(image.get_height()):
 			mask[x].append(bool(image.get_at((x,y))[3]))
 	return mask
-
-if __name__ == '__main__':
-	main()

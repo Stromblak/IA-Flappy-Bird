@@ -2,13 +2,11 @@ from red import *
 from sarsa_qlearning import *
 
 
-def ia(playerFlapped, tuberias, x, y, velCaida):
+def ia(tuberias, x, y, vely):
     # opcion pa elegir
     # red
-    red(tuberias, y, velCaida)
+    return red(tuberias, x, y, vely)
 
     # sarsa
 
     # qlearning
-
-    return playerFlapped

@@ -1,42 +1,37 @@
 import numpy as np
+import math
+import random
 
-ENTRADA = 8
-CAPA1 = 4
-CAPA2 = 4
+ENTRADA = 3
+CAPA = 3
 
-def red(tuberias, y, velCaida, pesos1, pesos2, pesos3):
-	entrada = [y, velCaida] 
-	tubs = 0
+def red(tuberias, x, y, vely, paj):
+	entrada = [ abs(vely) ]
 
-	# x, y-arriba, y-abajo
+	# siguiente tuberia
 	for uPipe, lPipe in tuberias:
-		entrada.extend( [uPipe["x"], uPipe["y"], lPipe["y"]] )
-		tubs += 1
-		if tubs == 2:
-			break
-	
-	if len(entrada) == 5:
-		entrada.extend( [0, 0, 0] )
+		if uPipe["x"] <= x - 30:
+			continue
+		# entrada.extend( [-uPipe["x"], uPipe["y"], lPipe["y"]] )
+		tubArriba = [uPipe["x"], uPipe["y"]]
+		tubAbajo  = [lPipe["x"], lPipe["y"]]
+		pajaro    = [x, y]
+
+		entrada.extend( [math.dist(pajaro, tubArriba), math.dist(pajaro, tubAbajo)] )
+		break
 
 	entrada = np.array(entrada)
-	capa1 = np.zeros(CAPA1, dtype=float)
-	capa2 = np.zeros(CAPA2, dtype=float)
+	capa = np.zeros(CAPA, dtype=float)
 
-	for i in range(CAPA1):
-		capa1[i] = np.dot(entrada, pesos1[i])
+	for i in range(CAPA):
+		capa[i] = np.dot(entrada, paj.pesos1[i])
 	
-	for i in range(CAPA2):
-		capa2[i] = np.dot(capa1, pesos2[i])
+	salida = np.dot(capa, paj.pesos2)
 
-	salida = np.dot(capa2, pesos3)
-	# print(salida)
+	if not random.randint(1, 100):
+		print(salida)
 	
-	if salida > 1500:
+	if salida > paj.sal:
 		return True
 	else:
 		return False
-
-
-
-
-
