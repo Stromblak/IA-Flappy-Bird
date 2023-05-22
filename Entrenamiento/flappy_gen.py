@@ -133,7 +133,7 @@ def main2():
 
 
 # cosa principal
-def mainGame(pajaros, pesos1, pesos2, pesos3):
+def mainGame(pajaros, pesos1, pesos2, pesos3, sal):
 	score = playerIndex = loopIter = 0
 
 	score = [0 for i in range(pajaros)]
@@ -177,7 +177,7 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 
 	while True:
 		for i in restantes:
-			if(red(zip(upperPipes, lowerPipes), playery[i], playerAccY, pesos1[i], pesos2[i], pesos3[i])):
+			if(red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], pesos1[i], pesos2[i], pesos3[i], sal[i])):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 						playerVelY[i] = playerFlapAcc
 						playerFlapped[i] = True
@@ -195,12 +195,15 @@ def mainGame(pajaros, pesos1, pesos2, pesos3):
 
 
 			# check for score
+			"""
 			playerMidPos = playerx[i] + IMAGES['player'][0].get_width() / 2
 			for pipe in upperPipes:
 				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 					score[i] += 1
 					SOUNDS['point'].play()
+			"""
+			score[i] += 1
 
 			# rotate the player
 			if playerRot[i] > -90:

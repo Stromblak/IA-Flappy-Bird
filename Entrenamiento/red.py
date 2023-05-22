@@ -1,22 +1,18 @@
 import numpy as np
 
-ENTRADA = 8
+ENTRADA = 5
 CAPA1 = 4
 CAPA2 = 4
 
-def red(tuberias, y, velCaida, pesos1, pesos2, pesos3):
-	entrada = [y, velCaida] 
-	tubs = 0
+def red(tuberias, x, y, velCaida, pesos1, pesos2, pesos3, sal):
+	entrada = [y, velCaida]
 
 	# x, y-arriba, y-abajo
 	for uPipe, lPipe in tuberias:
+		if uPipe["x"] < 50:
+			continue
 		entrada.extend( [uPipe["x"], uPipe["y"], lPipe["y"]] )
-		tubs += 1
-		if tubs == 2:
-			break
-	
-	if len(entrada) == 5:
-		entrada.extend( [0, 0, 0] )
+		break
 
 	entrada = np.array(entrada)
 	capa1 = np.zeros(CAPA1, dtype=float)
@@ -28,10 +24,10 @@ def red(tuberias, y, velCaida, pesos1, pesos2, pesos3):
 	for i in range(CAPA2):
 		capa2[i] = np.dot(capa1, pesos2[i])
 
-	salida = np.dot(capa2, pesos3)
+	salida = np.dot(capa1, pesos3)
 	# print(salida)
 	
-	if salida > 1500:
+	if salida > sal:
 		return True
 	else:
 		return False

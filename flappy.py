@@ -248,18 +248,14 @@ def mainGame(movementInfo):
 		
 
 		# ---------------------------- IA ------------------------------
-		if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY):
+		if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY) and 0:
 			if playery > -2 * IMAGES['player'][0].get_height():
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 				SOUNDS['wing'].play()
 		
-		# Movimiento IA
-		if (saltar):
-			if playery > -2 * IMAGES['player'][0].get_height():
-				playerVelY = playerFlapAcc
-				playerFlapped = True
-				SOUNDS['wing'].play()
+		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
+
 			
 		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
@@ -294,15 +290,6 @@ def mainGame(movementInfo):
 		if playerRot > -90:
 			playerRot -= playerVelRot
 
-		# ------------ RED NEURONAL -----------------------
-		playerFlapped = ia(playerFlapped, 
-							zip(upperPipes, lowerPipes),
-							playerx,
-							playery,	
-							playerVelY
-						)
-
-		algoritmos(sarsaOqlearning,playery, playerx, playerVelY, upperPipes, lowerPipes)
 
 		# player's movement
 		if playerVelY < playerMaxVelY and not playerFlapped:
