@@ -222,7 +222,7 @@ def mainGame(pajaros, listaPajaros):
 			if crashTest[0]:
 				restantes.remove(i)
 
-				if not len(restantes):
+				if not len(restantes) or score == 250:
 					return fitness
 
 			fitness[i] += 1

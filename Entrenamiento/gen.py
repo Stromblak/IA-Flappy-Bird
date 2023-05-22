@@ -4,12 +4,12 @@ import random
 import os
 import operator
 
-POBLACION = 100
+POBLACION = 50
 MUTACION = 5
-DELTA = 0.05
-MINFITNESS = 1000
-PARHIJOS = 5
-USARPESOS = False	
+DELTA = 0.1
+MINFITNESS = 2500
+HIJOS = 2
+USARPESOS = True
 
 
 class Pajaro:
@@ -19,7 +19,7 @@ class Pajaro:
 		if archivo == " ":
 			self.pesos1 = [ [ 0 for i in range(ENTRADA)] for j in range(CAPA) ]
 			self.pesos2 = [ 0 for i in range(CAPA) ]
-			self.sal = 1
+			self.sal = random.randint(1, 10)
 
 		else:
 			self.pesos1 = np.loadtxt(archivo, dtype=float, max_rows=CAPA)
@@ -38,6 +38,18 @@ class Pajaro:
 
 		self.mutar()
 
+	def donacion(self, don):
+		for i in range(CAPA):
+			for j in range(ENTRADA):
+				self.pesos1[i][j] = random.choice( [self.pesos1[i][j], don.pesos1[i][j]] )
+	
+		for i in range(CAPA):
+			self.pesos2[i] = random.choice( [self.pesos2[i], don.pesos2[i]] )
+
+		self.sal = random.choice( [self.sal, don.sal] )
+
+		self.mutar()
+
 	def mutar(self):
 		entrada = random.randint(0, ENTRADA-1)
 		capa = random.randint(0, CAPA-1)
@@ -51,8 +63,9 @@ class Pajaro:
 			self.pesos1[capa][entrada] = max(0, self.pesos1[capa][entrada] + delta)
 			self.pesos2[capa] = max(0, self.pesos2[capa] + delta)
 		
-		self.sal = max(1, self.sal + random.choice( [-1, 1] ))
-
+		self.sal = max(1, self.sal + 10*random.choice( [-DELTA, DELTA] ))
+		# self.sal = min(5, self.sal)
+		
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
 			return
@@ -78,7 +91,7 @@ def algGenetico():
 
 	# Creacion poblacion
 	if USARPESOS:
-		dir_list =os.listdir("./pesos")
+		dir_list = os.listdir("./pesos")
 		pajaros = [ Pajaro( "./pesos/" + dir_list[i] ) for i in range(len(dir_list)) ]
 		pajaros.extend( [ Pajaro(" ") for i in range(len(dir_list), POBLACION) ])
 	
@@ -95,14 +108,14 @@ def algGenetico():
 		# Descedencia
 		pajaros.sort(key=operator.attrgetter('fitness'))
 		pajaros.reverse()
-
-		for i in range(PARHIJOS):
-			pajaros[i].nuevo(pajaros[POBLACION-1 - i], pajaros[POBLACION-i - i-1])
-			pajaros[i+1].nuevo(pajaros[POBLACION-1 - i], pajaros[POBLACION - i-1])		
+		
+		for i in range( int(HIJOS/2) ):
+			pajaros[POBLACION-1 - i  ].nuevo(pajaros[i], pajaros[i+1])
+			pajaros[POBLACION-1 - i-1].nuevo(pajaros[i], pajaros[i+1])		
 
 		# Mutacion y guardado de pesos
 		for i in range(POBLACION):
-			if MUTACION < random.randint(0, 100) and i > POBLACION/10:
+			if MUTACION < random.randint(0, 100):
 				pajaros[i].mutar()
 
 			pajaros[i].guardar("pesos/peso" + str(genPajaro))
