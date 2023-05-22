@@ -1,19 +1,28 @@
 from flappy_gen import *
 from red import ENTRADA, CAPA
 from random import *
+import os
 
 POBLACION = 100
 MUTACION = 10
 DELTA = 0.05
+MINFITNESS = 500
 
 
 class Pajaro:
-	def __init__(self):
-		self.pesos1 = [ [ 0 for i in range(ENTRADA)] for j in range(CAPA) ]
-		self.pesos2 = [ 0 for i in range(CAPA) ]
+	def __init__(self, archivo):
 		self.fitness = 0
-		self.sal = 1 # uniform(100, 2000)
-	
+
+		if archivo == " ":
+			self.pesos1 = [ [ 0 for i in range(ENTRADA)] for j in range(CAPA) ]
+			self.pesos2 = [ 0 for i in range(CAPA) ]
+			self.sal = 1 # uniform(100, 2000)
+
+		else:
+			self.pesos1 = np.loadtxt(archivo, dtype=float, max_rows=CAPA)
+			self.pesos2 = np.loadtxt(archivo, dtype=float, skiprows=CAPA, max_rows=1)
+			self.sal = np.loadtxt(archivo, dtype=float, skiprows=CAPA + 1)
+
 	def nuevo(self, p1, p2):
 		for i in range(CAPA):
 			for j in range(ENTRADA):
@@ -42,7 +51,7 @@ class Pajaro:
 		self.sal = max(1, self.sal + choice( [DELTA, -DELTA] )*20)
 
 	def guardar(self, archivo):
-		if self.fitness < 200:
+		if self.fitness < MINFITNESS:
 			return
 				
 		f = open(archivo + "-" + str(self.fitness) + ".txt", 'w')
@@ -60,51 +69,56 @@ class Pajaro:
 		f.close()
 
 
-main2()
-genPajaro = 0
-maxAnterior = -1
-pajaros = [ Pajaro() for i in range(POBLACION) ]
+def algGenetico():
+	main2()
+	genPajaro = 0
+	maxAnterior = -1
 
-while True:
-	pesos1 = [pajaros[i].pesos1 for i in range(POBLACION)]
-	pesos2 = [pajaros[i].pesos2 for i in range(POBLACION)]
-	sal = [pajaros[i].sal for i in range(POBLACION)]
+	dir_list = os.listdir("./pesos")
+	pajaros = [ Pajaro( "./pesos/" + dir_list[i] ) for i in range(len(dir_list)) ]
+	pajaros.extend( [ Pajaro(" ") for i in range(len(dir_list), POBLACION) ])
 
-
-	crashInfo = mainGame(POBLACION, pesos1, pesos2, sal)
-
-	# resultado
-	for i in range(POBLACION):
-		pajaros[i].fitness = crashInfo[i]
-
-	# descendencia
-	max1, max2 = -1, -1
-	min1, min2 = 10000, 10000
-	for i in range(POBLACION):
-		if pajaros[i].fitness > max1:
-			max2 = max1
-			max1 = i
-
-		if max2 < pajaros[i].fitness < max1:
-			max2 = i
-
-		if pajaros[i].fitness < min1:
-			min2 = min1
-			min1 = i
-
-		if min2 > pajaros[i].fitness > min1:
-			min2 = i
-
-	pajaros[min1].nuevo(pajaros[max1], pajaros[max2])
-	pajaros[min2].nuevo(pajaros[max1], pajaros[max2])
-
-	for i in range(POBLACION):
-		if MUTACION < randint(0, 100) and i != max1 and i != maxAnterior:
-			pajaros[i].mutar()
-
-		pajaros[i].guardar("pesos/peso" + str(genPajaro))
-		genPajaro += 1
-	
-	maxAnterior = max1
+	while True:
+		pesos1 = [pajaros[i].pesos1 for i in range(POBLACION)]
+		pesos2 = [pajaros[i].pesos2 for i in range(POBLACION)]
+		sal = [pajaros[i].sal for i in range(POBLACION)]
 
 
+		crashInfo = mainGame(POBLACION, pajaros)
+
+		# resultado
+		for i in range(POBLACION):
+			pajaros[i].fitness = crashInfo[i]
+
+		# descendencia
+		max1, max2 = -1, -1
+		min1, min2 = 10000, 10000
+		for i in range(POBLACION):
+			if pajaros[i].fitness > max1:
+				max2 = max1
+				max1 = i
+
+			if max2 < pajaros[i].fitness < max1:
+				max2 = i
+
+			if pajaros[i].fitness < min1:
+				min2 = min1
+				min1 = i
+
+			if min2 > pajaros[i].fitness > min1:
+				min2 = i
+
+		pajaros[min1].nuevo(pajaros[max1], pajaros[max2])
+		pajaros[min2].nuevo(pajaros[max1], pajaros[max2])
+
+		for i in range(POBLACION):
+			if MUTACION < randint(0, 100) and i != max1 and i != maxAnterior:
+				pajaros[i].mutar()
+
+			pajaros[i].guardar("pesos/peso" + str(genPajaro))
+			genPajaro += 1
+		
+		maxAnterior = max1
+
+
+algGenetico()

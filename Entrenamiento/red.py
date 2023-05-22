@@ -5,7 +5,7 @@ import random
 ENTRADA = 3
 CAPA = 3
 
-def red(tuberias, x, y, vely, pesos1, pesos2, sal):
+def red(tuberias, x, y, vely, paj):
 	entrada = [ abs(vely) ]
 
 	# siguiente tuberia
@@ -24,14 +24,14 @@ def red(tuberias, x, y, vely, pesos1, pesos2, sal):
 	capa = np.zeros(CAPA, dtype=float)
 
 	for i in range(CAPA):
-		capa[i] = np.dot(entrada, pesos1[i])
+		capa[i] = np.dot(entrada, paj.pesos1[i])
 	
-	salida = np.dot(capa, pesos2)
+	salida = np.dot(capa, paj.pesos2)
 
 	if not random.randint(1, 100):
 		print(salida)
 	
-	if salida > sal:
+	if salida > paj.sal:
 		return True
 	else:
 		return False

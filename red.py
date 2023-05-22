@@ -38,6 +38,3 @@ def red(tuberias, x, y, vely):
 		return True
 	else:
 		return False
-
-
-

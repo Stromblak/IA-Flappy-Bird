@@ -125,7 +125,7 @@ def main2():
 
 
 # cosa principal
-def mainGame(pajaros, pesos1, pesos2, sal):
+def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
 
 	score = [0 for i in range(pajaros)]
@@ -170,7 +170,7 @@ def mainGame(pajaros, pesos1, pesos2, sal):
 	while True:
 		for i in restantes:
 			# ia
-			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], pesos1[i], pesos2[i], sal[i]):
+			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], listaPajaros[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 						playerVelY[i] = playerFlapAcc
 						playerFlapped[i] = True

@@ -1,4 +1,3 @@
 __pycache__/
 .vscode
-Entrenamiento/pesos/*.txt
 Entrenamiento/__pycache__
