@@ -1,29 +1,59 @@
 import random
 import hashlib
-from flappy import SCREENHEIGHT
+from flappy import *
 
-Q = {}  # Diccionario para almacenar los valores Q, guarda un par estado y accion (Q es el valor)
+Q = (
+    {}
+)  # Diccionario para almacenar los valores Q, guarda un par estado y accion (Q es el valor)
 a = 1  # alfa: Tasa de aprendizaje
 g = 0  # gamma: Factor de descuento
-e = 0.1  # epsilon: para e-greedy
+e = 0  # epsilon: para e-greedy
 
 
 def getR(state, action):
-    if state == SCREENHEIGHT / 2:
-        reward = 0
-    elif state < SCREENHEIGHT / 2 and action:
-        reward = -1
-    elif state < SCREENHEIGHT / 2 and not action:
-        reward = 1
-    elif state > SCREENHEIGHT / 2 and action:
-        reward = 1
-    elif state > SCREENHEIGHT / 2 and not action:
-        reward = -1
+    reward = 0
+    # if state[0] == SCREENHEIGHT / 2:
+    #     reward = 0
+    # elif state[0] < SCREENHEIGHT / 2 and action:
+    #     reward += -1
+    # elif state[0] < SCREENHEIGHT / 2 and not action:
+    #     reward += 1
+    # elif state[0] > SCREENHEIGHT / 2 and action:
+    #     reward += 1
+    # elif state[0] > SCREENHEIGHT / 2 and not action:
+    #     reward += -1
+    # pipe_height = 320  # Altura de la tubería
+
+    # pipetop = state[1] + 320
+    # pipebot = state[2]
+    # print(state[0], pipetop, pipebot)
+
+    # # si el pajaro esta a la altura del pipe superior
+    # if state[0] <= pipetop and action:
+    #     reward -= 1
+    # elif state[0] <= pipetop and not action:
+    #     reward += 1
+    # # si el pajaro esta a la altura del pipe inferior
+    # if state[0] >= pipebot and action:
+    #     reward += 1
+    # elif state[0] >= pipebot and not action:
+    #     reward -= 1
+
+    pipebot = state[1]
+    if state[0] > pipebot and action:
+        reward += 1
+    elif state[0] > pipebot and not action:
+        reward -= 1
+    elif state[0] <= pipebot and action:
+        reward -= 1
+    print(state[0], pipebot, reward)
+    if state[0] < 5 and action:
+        reward -= 10
     return reward
 
 
-def getState(playery, playerx, playerVelY, upperPipes, lowerPipes):
-    state = playery
+def getState(playery, upperPipe, lowerPipe):
+    state = (playery // 10, lowerPipe // 10)
     return state
 
 

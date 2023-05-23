@@ -7,7 +7,7 @@ from ia import *
 from sarsa_qlearning import *
 
 sys.setrecursionlimit(10000)
-FPS = 600000
+FPS = 60
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
@@ -205,6 +205,7 @@ def mainGame(movementInfo):
 	# get 2 new pipes to add to upperPipes lowerPipes list
 	newPipe1 = getRandomPipe()
 	newPipe2 = getRandomPipe()
+	
 
 	# list of upper pipes
 	upperPipes = [
@@ -236,9 +237,8 @@ def mainGame(movementInfo):
 	
 	sarsaOqlearning = 1
 	saltar=False
-	prevAction=False
 	# Inicializar SARSA/Q-Learning con S
-	state = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+	state = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
 	if sarsaOqlearning:
 		prevAction = egreedy(state)
@@ -332,7 +332,7 @@ def mainGame(movementInfo):
 			saltar = prevAction
 			
 			# observar R, S'
-			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+			newState = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
 			R = getR(newState,prevAction)
 
 			# elegir A' de un S' (con epsilon-greedy)
@@ -354,7 +354,7 @@ def mainGame(movementInfo):
 			saltar = prevAction
 
 			# observar R, S'
-			newState = getState(playery, playerx, playerVelY, upperPipes, lowerPipes)
+			newState = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
 			R = getR(newState, prevAction)
 
 			# aplicar formula Q
@@ -497,7 +497,7 @@ def getRandomPipe():
 	# y of gap between upper and lower pipe
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
 	gapY += int(BASEY * 0.2)
-	pipeHeight = IMAGES['pipe'][0].get_height()
+	pipeHeight = IMAGES['pipe'][0].get_height()	
 	pipeX = SCREENWIDTH + 10
 
 	return [
