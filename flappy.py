@@ -321,11 +321,6 @@ def mainGame(movementInfo):
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 
-		# if playery < SCREENHEIGHT / 2 :
-		# 	saltar=False
-		# else: 
-		# 	saltar=True
-	
 		# SARSA/Q-Learning
 		if sarsaOqlearning:
         	# ejecutar A
@@ -432,9 +427,9 @@ def showGameOverScreen(crashInfo):
 	upperPipes, lowerPipes = crashInfo['upperPipes'], crashInfo['lowerPipes']
 
 	# play hit and die sounds
-	SOUNDS['hit'].play()
-	if not crashInfo['groundCrash']:
-		SOUNDS['die'].play()
+	# SOUNDS['hit'].play()
+	# if not crashInfo['groundCrash']:
+	# 	SOUNDS['die'].play()
 
 	while True:
 		# para que se reinicie automatico

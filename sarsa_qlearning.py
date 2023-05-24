@@ -2,9 +2,7 @@ import random
 import hashlib
 from flappy import *
 
-Q = (
-    {}
-)  # Diccionario para almacenar los valores Q, guarda un par estado y accion (Q es el valor)
+Q = {}  # Diccionario para almacenar Q's, guarda un par estado y accion (Q es el valor)
 a = 1  # alfa: Tasa de aprendizaje
 g = 0  # gamma: Factor de descuento
 e = 0  # epsilon: para e-greedy
@@ -39,19 +37,36 @@ def getR(state, action):
     # elif state[0] >= pipebot and not action:
     #     reward -= 1
 
+    # state[0] = playery (altura)
+    # state[1] = altura donde comienza el pipe inferior
+    # gap = 100
     pipebot = state[1]
-    if state[0] > pipebot and action:
+
+    # si esta un poco por encima del pipe inferior (altura +o- perfecta)
+    if state[0] == pipebot - 5 and action:
+        reward -= 1
+    elif state[0] == pipebot - 5 and not action:
+        reward += 1
+    # si esta bajo la pipe inferior (debe saltar)
+    elif state[0] > pipebot and action:
         reward += 1
     elif state[0] > pipebot and not action:
         reward -= 1
-    elif state[0] <= pipebot and action:
+    # si esta sobre la pipe inferior y el gap (no debe saltar)
+    elif state[0] < pipebot - 5 and action:
         reward -= 1
-    print(state[0], pipebot, reward)
+    elif state[0] < pipebot - 5 and not action:
+        reward += 1
+    # si esta casi tocando el cielo
     if state[0] < 5 and action:
         reward -= 10
+    print(state[0], pipebot, reward)
     return reward
 
 
+# el estado actual del juego
+# altura del pajaro y las pipes, dividido por 10 para tener menos estados,
+# ya que no importa si la altura es unos px mas o menos
 def getState(playery, upperPipe, lowerPipe):
     state = (playery // 10, lowerPipe // 10)
     return state
