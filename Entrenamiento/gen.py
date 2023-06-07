@@ -1,11 +1,11 @@
 from flappy_gen import *
-from red import ENTRADA, CAPA
+from red import NODOS, CAPAS
 import random
 import os
 import operator
 
-POBLACION = 15
-MUTACION = 5
+POBLACION = 10
+MUTACION = 10
 DELTA = 0.05
 MINFITNESS = 2500
 HIJOS = 2
@@ -17,70 +17,49 @@ class Pajaro:
 		self.fitness = 0
 
 		if archivo == " ":
-			self.pesos1 = [ [ 0 for i in range(ENTRADA)] for j in range(CAPA) ]
-			self.pesos2 = [ 0 for i in range(CAPA) ]
-			self.sal = random.randint(1, 10)
 
-		else:
-			self.pesos1 = np.loadtxt(archivo, dtype=float, max_rows=CAPA)
-			self.pesos2 = np.loadtxt(archivo, dtype=float, skiprows=CAPA, max_rows=1)
-			self.sal = np.loadtxt(archivo, dtype=float, skiprows=CAPA + 1)
+			self.pesos = []
+			for i in range(CAPAS-1):
+				self.pesos.append( [] )
+				for j in range(NODOS[i+1]):
+					self.pesos[i].append( np.zeros(NODOS[i], dtype=float) )
 
-	def nuevo(self, p1, p2):
-		for i in range(CAPA):
-			for j in range(ENTRADA):
-				self.pesos1[i][j] = random.choice( [p1.pesos1[i][j], p2.pesos1[i][j]] )
-	
-		for i in range(CAPA):
-			self.pesos2[i] = random.choice( [p1.pesos2[i], p2.pesos2[i]] )
+					for k in range(NODOS[i]):
+						self.pesos[i][-1][k] = random.uniform(0, 1)
 
-		self.sal = random.choice( [p1.sal, p2.sal] )
 
-		self.mutar()
-
-	def donacion(self, don):
-		for i in range(CAPA):
-			for j in range(ENTRADA):
-				self.pesos1[i][j] = random.choice( [self.pesos1[i][j], don.pesos1[i][j]] )
-	
-		for i in range(CAPA):
-			self.pesos2[i] = random.choice( [self.pesos2[i], don.pesos2[i]] )
-
-		self.sal = random.choice( [self.sal, don.sal] )
+	def hijo(self, p1, p2):
+		for i in range(CAPAS-1):
+			for j in range(NODOS[i+1]):
+				for k in range(NODOS[i]):
+					self.pesos[i][j][k] = random.choice([p1.pesos[i][j][k], p2.pesos[i][j][k]])
 
 		self.mutar()
 
 	def mutar(self):
-		entrada = random.randint(0, ENTRADA-1)
-		capa = random.randint(0, CAPA-1)
+		camino = []
+		for i in range(CAPAS):
+			camino.append( random.randint(0, NODOS[i]-1) )
 
-		delta = random.choice( [-DELTA, DELTA] )
-		if delta > 0:
-			self.pesos1[capa][entrada] = min(1, self.pesos1[capa][entrada] + delta)
-			self.pesos2[capa] = min(1, self.pesos2[capa] + delta)
-		
-		else:
-			self.pesos1[capa][entrada] = max(0, self.pesos1[capa][entrada] + delta)
-			self.pesos2[capa] = max(0, self.pesos2[capa] + delta)
-		
-		self.sal = max(1, self.sal + 10*random.choice( [-DELTA, DELTA] ))
-		# self.sal = min(5, self.sal)
-		
+		delta = random.choice([-DELTA, DELTA])
+		for i in range(1, CAPAS):
+			nuevo = self.pesos[i-1][ camino[i] ][ camino[i-1] ] + delta
+
+			if delta > 0:
+				self.pesos[i-1][ camino[i] ][ camino[i-1] ] = min(1, nuevo)
+
+			else:
+				self.pesos[i-1][ camino[i] ][ camino[i-1] ] = max(0, nuevo)		
+
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
 			return
 				
 		f = open(archivo + "-" + str(self.fitness) + ".txt", 'w')
 
-		for i in range(CAPA):
-			for j in range(ENTRADA):
-				f.write( str(self.pesos1[i][j]) + " " )
-			f.write("\n")
-
-		for i in range(CAPA):
-			f.write( str(self.pesos2[i]) + " " )
-		f.write("\n")	
-		f.write(str(self.sal))
+		for i in range(CAPAS-1):
+			for j in range(NODOS[i+1]):
+				f.write( " ".join( [str(v) for v in self.pesos[i][j]]) + "\n")
 
 		f.close()
 
@@ -110,10 +89,10 @@ def algGenetico():
 		pajaros.reverse()
 		
 		for i in range( int(HIJOS/2) ):
-			pajaros[POBLACION-1 - i  ].nuevo(pajaros[i], pajaros[i+1])
-			pajaros[POBLACION-1 - i-1].nuevo(pajaros[i], pajaros[i+1])
+			pajaros[POBLACION-1 - i  ].hijo(pajaros[i], pajaros[i+1])
+			pajaros[POBLACION-1 - i-1].hijo(pajaros[i], pajaros[i+1])
 
-		# Mutacion y guardado de pesos
+		# Mutacion
 		for i in range(POBLACION):
 			if MUTACION < random.randint(0, 100):
 				pajaros[i].mutar()
