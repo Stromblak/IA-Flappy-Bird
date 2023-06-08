@@ -3,13 +3,16 @@ from red import NODOS, CAPAS
 import random
 import os
 import operator
+import statistics
 
-POBLACION = 2000
+POBLACION = 50
 MUTACION = 10
-DELTA = 0.1
+DELTA = 0.05
 MINFITNESS = 2500
-HIJOS = 0
+HIJOS = int(POBLACION*0.1)
 USARPESOS = False
+WMIN = -1
+WMAX = 1
 
 
 class Pajaro:
@@ -24,7 +27,7 @@ class Pajaro:
 				self.pesos[i].append( np.zeros(NODOS[i-1], dtype=float) )
 
 				for k in range(NODOS[i-1]):
-					self.pesos[i][-1][k] = random.uniform(0, 0.1)
+					self.pesos[i][-1][k] = 0 #random.uniform(WMIN, WMAX)
 
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
@@ -32,28 +35,31 @@ class Pajaro:
 				for k in range(NODOS[i-1]):
 					self.pesos[i][j][k] = random.choice([p1.pesos[i][j][k], p2.pesos[i][j][k]])
 
+		#self.mutarCamino()
+		self.mutarConexion()
+
 	def mutarCamino(self):
 		camino = []
 		for i in range(CAPAS):
 			camino.append( random.randint(0, NODOS[i]-1) )
 
-		delta = random.uniform(-DELTA, DELTA)
+		delta = random.choice([-DELTA, DELTA])
 		
 		for i in range(1, CAPAS):
 			nuevo = self.pesos[i][ camino[i] ][ camino[i-1] ] + delta
 
 			if delta > 0:
-				self.pesos[i][ camino[i] ][ camino[i-1] ] = min(1, nuevo)
+				self.pesos[i][ camino[i] ][ camino[i-1] ] = min(WMAX, nuevo)
 
 			else:
-				self.pesos[i][ camino[i] ][ camino[i-1] ] = max(0, nuevo)		
+				self.pesos[i][ camino[i] ][ camino[i-1] ] = max(WMIN, nuevo)		
 
 	def mutarConexion(self):
 		capa  = random.randint(1, CAPAS-1)
 		nodoCapa = random.randint(0, NODOS[capa]-1)
 		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
 
-		self.pesos[capa][nodoCapa][nodoAnterior] = random.uniform(-DELTA, DELTA)# random.uniform(0, 1)
+		self.pesos[capa][nodoCapa][nodoAnterior] = random.uniform(WMIN, WMAX)# random.uniform(0, 1)
 
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
@@ -88,6 +94,8 @@ def algGenetico():
 		for i in range(POBLACION):
 			pajaros[i].fitness = fitness[i]
 
+		print(statistics.mean(fitness), max(fitness))
+
 		# Descedencia
 		pajaros.sort(key=operator.attrgetter('fitness'))
 		pajaros.reverse()
@@ -100,7 +108,7 @@ def algGenetico():
 		for i in range(POBLACION):
 			if MUTACION < random.randint(0, 100):
 				pajaros[i].mutarConexion()
-				pajaros[i].mutarCamino()
+				#pajaros[i].mutarCamino()
 
 			pajaros[i].guardar("pesos/peso" + str(genPajaro))
 			genPajaro += 1

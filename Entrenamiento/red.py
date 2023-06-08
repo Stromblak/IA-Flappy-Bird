@@ -1,36 +1,35 @@
 import numpy as np
 import math
 
-NODOS = [3, 4, 3, 2, 1]
+NODOS = [7, 3, 1]
 CAPAS = len(NODOS)
+MODO = 3
 
 def red(tuberias, player, paj):
-	entrada = [max(0, player["velY"])]
+	entrada = [player["velY"]]
 
 	# siguiente tuberia
+	
 	for uPipe, lPipe in tuberias["tuberias"]:
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
+		
+		if MODO == 1:
+			distTubArriba = (uPipe["y"] + tuberias["h"]) - player["y"]
+			distTubAbajo  = lPipe["y"] - (player["y"] + player["h"])
+			entrada.extend( [distTubArriba, distTubAbajo] )
 
-		distTubArriba = (uPipe["y"] + tuberias["h"] + tuberias["w"]) - player["y"]
-		distTubAbajo  = (player["y"] + player["h"]) - (lPipe["y"] + tuberias["w"])
+		elif MODO == 2:
+			tubArriba = [uPipe["x"] + tuberias["w"], uPipe["y"] + tuberias["h"]]
+			tubAbajo  = [lPipe["x"] + tuberias["w"], lPipe["y"]]
+			pajaroArriba = [player["x"], player["y"]]
+			pajaroAbajo  = [player["x"], player["y"] + player["h"]]
+			entrada.extend( [math.dist(pajaroArriba, tubArriba), math.dist(pajaroAbajo, tubAbajo)] )
 
-		entrada.extend( [ max(0, distTubArriba), max(0, distTubAbajo)] )
+		elif MODO == 3:
+			input = [player["y"], player["h"], uPipe["y"] + tuberias["h"], lPipe["y"], uPipe["x"], tuberias["w"]]
+			entrada.extend(input)
 		break
-
-	"""
-	for uPipe, lPipe in tuberias:
-		if uPipe["x"] <= x - 30:
-			continue
-		tubArriba = [uPipe["x"], uPipe["y"]]
-		tubAbajo  = [lPipe["x"], lPipe["y"]]
-		pajaro    = [x, y]
-
-		entrada.append( math.dist(pajaro, tubArriba) )
-		entrada.append( math.dist(pajaro, tubAbajo) )
-
-		break
-	"""
 
 	if len(entrada) != NODOS[0]:
 		entrada.extend( [0 for i in range(NODOS[0] - len(entrada))] )

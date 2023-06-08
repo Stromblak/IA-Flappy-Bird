@@ -201,7 +201,7 @@ def mainGame(pajaros, listaPajaros):
 	playerFlapAcc =  -9   # players speed on flapping
 	playerFlapped =  [False for i in range(pajaros)] # True when player flaps
 
-	restantes     =  [i for i in range(pajaros)]
+	restantes     =  {i for i in range(pajaros)}
 	fitness       =  [0 for i in range(pajaros)]
 
 	tuberiaW  = IMAGES['pipe'][0].get_height()
@@ -225,12 +225,12 @@ def mainGame(pajaros, listaPajaros):
 						if SONIDO:
 							SOUNDS['wing'].play()	
 
-
+		tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+		muertos = set()
 		for i in restantes:
-			# ia
-			tuberia["tuberias"] = zip(upperPipes, lowerPipes)
 			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
 
+			# ia
 			if red(tuberia, pajaro, listaPajaros[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 					playerVelY[i] = playerFlapAcc
@@ -243,13 +243,7 @@ def mainGame(pajaros, listaPajaros):
 								upperPipes, lowerPipes)
 		
 			if crashTest[0]:
-				restantes.remove(i)
-
-				if not len(restantes):
-					return fitness
-				
-			if score == 250:
-				return fitness
+				muertos.add(i)
 
 			fitness[i] += 1
 
@@ -268,10 +262,14 @@ def mainGame(pajaros, listaPajaros):
 			playery[i] += min(playerVelY[i], BASEY - playery[i] - playerH)
 
 
-		playerMidPos = playerx[restantes[0]] + IMAGES['player'][0].get_width() / 2
+		restantes -= muertos
+		if not len(restantes) or score == 250:
+			return fitness
+
+		playerMidPos = int(SCREENWIDTH * 0.2) + IMAGES['player'][0].get_width() / 2
 		for pipe in upperPipes:
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+			if pipeMidPos <= playerMidPos < pipeMidPos + 6:
 				score += 1
 				if SONIDO:
 					SOUNDS['point'].play()
@@ -282,8 +280,9 @@ def mainGame(pajaros, listaPajaros):
 		loopIter = (loopIter + 1) % 30
 		basex = -((-basex + 100) % baseShift)
 
+
 		dt = FPSCLOCK.tick(FPS)/1000.0
-		pipeVelX = -128 * dt * (FPSCLOCK.get_fps()/ FPS)
+		pipeVelX = -128 * dt * (FPSCLOCK.get_fps() / FPS)
 		# move pipes to left
 		for uPipe, lPipe in zip(upperPipes, lowerPipes):
 			uPipe['x'] += pipeVelX
