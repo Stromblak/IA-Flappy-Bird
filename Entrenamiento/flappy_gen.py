@@ -212,17 +212,29 @@ def mainGame(pajaros, listaPajaros):
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
 				sys.exit()
-			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-				if playery > -2 * IMAGES['player'][0].get_height():
-					playerVelY = playerFlapAcc
-					playerFlapped = True
-					if SONIDO: 
-						SOUNDS['wing'].play()
+		
+			for i in restantes:
+				if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+					if playery[i] > -2 * IMAGES['player'][0].get_height():
+						playerVelY[i] = playerFlapAcc
+						playerFlapped[i] = True
+						if SONIDO:
+							SOUNDS['wing'].play()	
 
 
 		for i in restantes:
 			# ia
-			if red(zip(upperPipes, lowerPipes), playerx[i], playery[i], playerVelY[i], listaPajaros[i]):
+			alturaTuberia = IMAGES['pipe'][0].get_height()
+
+			tuberiaW  = IMAGES['pipe'][0].get_height()
+			tuberiaH = IMAGES['pipe'][0].get_height()
+			playerW = IMAGES['player'][0].get_width()
+			playerH = IMAGES['player'][0].get_height()
+
+			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
+
+			if red(tuberia, pajaro, listaPajaros[i]):
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 					playerVelY[i] = playerFlapAcc
 					playerFlapped[i] = True

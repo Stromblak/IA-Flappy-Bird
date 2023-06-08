@@ -4,16 +4,20 @@ import math
 NODOS = [3, 4, 3, 2, 1]
 CAPAS = len(NODOS)
 
-def red(tuberias, x, y, vely, paj):
-	entrada = [max(0, vely)]
+def red(tuberias, player, paj):
+	entrada = [max(0, player["velY"])]
 
 	# siguiente tuberia
-	for uPipe, lPipe in tuberias:
-		if uPipe["x"] <= x - 30:
+	for uPipe, lPipe in tuberias["tuberias"]:
+		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		entrada.extend( [ max(0, uPipe["y"] - y), max(0, y - lPipe["y"])] )
+		distTubArriba = uPipe["y"] + tuberias["h"] - player["y"]
+		distTubAbajo  = (player["y"] + player["h"]) - lPipe["y"]
+
+		entrada.extend( [ max(0, distTubArriba), max(0, distTubAbajo)] )
 		break
+
 	"""
 	for uPipe, lPipe in tuberias:
 		if uPipe["x"] <= x - 30:
@@ -24,6 +28,7 @@ def red(tuberias, x, y, vely, paj):
 
 		entrada.append( math.dist(pajaro, tubArriba) )
 		entrada.append( math.dist(pajaro, tubAbajo) )
+
 		break
 	"""
 
@@ -38,10 +43,10 @@ def red(tuberias, x, y, vely, paj):
 	# calculo red
 	for i in range(1, CAPAS):
 		for j in range(NODOS[i]):
-			capas[i][j] = np.dot(capas[i-1], paj.pesos[i-1][j])
+			capas[i][j] = np.dot(paj.pesos[i][j], capas[i-1])
 
 	# Salida
-	if capas[-1][0] >= 1:
+	if capas[-1][-1] >= 1:
 		return True
 	else:
 		return False
