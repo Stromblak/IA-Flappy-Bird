@@ -7,7 +7,7 @@ from red import *
 
 SONIDO = False
 
-FPS = 30
+FPS = 30.0
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
@@ -190,9 +190,6 @@ def mainGame(pajaros, listaPajaros):
 		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
 	]
 
-	dt = FPSCLOCK.tick(FPS)/1000
-	pipeVelX = -128 * dt
-
 	# player velocity, max velocity, downward acceleration, acceleration on flap
 	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
 	playerMaxVelY =  10   # max vel along Y, max descend speed
@@ -206,6 +203,13 @@ def mainGame(pajaros, listaPajaros):
 
 	restantes     =  [i for i in range(pajaros)]
 	fitness       =  [0 for i in range(pajaros)]
+
+	tuberiaW  = IMAGES['pipe'][0].get_height()
+	tuberiaH = IMAGES['pipe'][0].get_height()
+	playerW = IMAGES['player'][0].get_width()
+	playerH = IMAGES['player'][0].get_height()
+	tuberia = {"tuberias": 1, "h": tuberiaH, "w": tuberiaW}
+	dt = FPSCLOCK.tick(FPS)/1000.0
 
 	while True:
 		for event in pygame.event.get():
@@ -224,14 +228,7 @@ def mainGame(pajaros, listaPajaros):
 
 		for i in restantes:
 			# ia
-			alturaTuberia = IMAGES['pipe'][0].get_height()
-
-			tuberiaW  = IMAGES['pipe'][0].get_height()
-			tuberiaH = IMAGES['pipe'][0].get_height()
-			playerW = IMAGES['player'][0].get_width()
-			playerH = IMAGES['player'][0].get_height()
-
-			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+			tuberia["tuberias"] = zip(upperPipes, lowerPipes)
 			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
 
 			if red(tuberia, pajaro, listaPajaros[i]):
@@ -248,8 +245,11 @@ def mainGame(pajaros, listaPajaros):
 			if crashTest[0]:
 				restantes.remove(i)
 
-				if not len(restantes) or score == 250:
+				if not len(restantes):
 					return fitness
+				
+			if score == 250:
+				return fitness
 
 			fitness[i] += 1
 
@@ -265,9 +265,7 @@ def mainGame(pajaros, listaPajaros):
 
 			# more rotation to cover the threshold (calculated in visible rotation)
 			playerRot[i] = 45
-
-			playerHeight = IMAGES['player'][playerIndex].get_height()
-			playery[i] += min(playerVelY[i], BASEY - playery[i] - playerHeight)
+			playery[i] += min(playerVelY[i], BASEY - playery[i] - playerH)
 
 
 		playerMidPos = playerx[restantes[0]] + IMAGES['player'][0].get_width() / 2
@@ -284,6 +282,8 @@ def mainGame(pajaros, listaPajaros):
 		loopIter = (loopIter + 1) % 30
 		basex = -((-basex + 100) % baseShift)
 
+		dt = FPSCLOCK.tick(FPS)/1000.0
+		pipeVelX = -128 * dt * (FPSCLOCK.get_fps()/ FPS)
 		# move pipes to left
 		for uPipe, lPipe in zip(upperPipes, lowerPipes):
 			uPipe['x'] += pipeVelX
@@ -341,7 +341,6 @@ def mainGame(pajaros, listaPajaros):
 			SCREEN.blit(playerSurface, (playerx[i], playery[i]))
 
 		pygame.display.update()
-		FPSCLOCK.tick(FPS)
 
 
 def showScore(score):
@@ -391,7 +390,7 @@ def checkCrash(player, upperPipes, lowerPipes):
 	if player['y'] + player['h'] >= BASEY - 1:
 		return [True, True]
 	
-	elif player['y'] + player['h'] <= -1:
+	elif player['y'] + player['h'] <= 0:
 		return [True, True]
 	
 	else:

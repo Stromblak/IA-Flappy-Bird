@@ -12,8 +12,8 @@ def red(tuberias, player, paj):
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		distTubArriba = uPipe["y"] + tuberias["h"] - player["y"]
-		distTubAbajo  = (player["y"] + player["h"]) - lPipe["y"]
+		distTubArriba = (uPipe["y"] + tuberias["h"] + tuberias["w"]) - player["y"]
+		distTubAbajo  = (player["y"] + player["h"]) - (lPipe["y"] + tuberias["w"])
 
 		entrada.extend( [ max(0, distTubArriba), max(0, distTubAbajo)] )
 		break

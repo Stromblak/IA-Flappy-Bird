@@ -4,9 +4,9 @@ import random
 import os
 import operator
 
-POBLACION = 100
+POBLACION = 2000
 MUTACION = 10
-DELTA = 0.05
+DELTA = 0.1
 MINFITNESS = 2500
 HIJOS = 0
 USARPESOS = False
@@ -24,7 +24,7 @@ class Pajaro:
 				self.pesos[i].append( np.zeros(NODOS[i-1], dtype=float) )
 
 				for k in range(NODOS[i-1]):
-					self.pesos[i][-1][k] = random.uniform(0, 1)
+					self.pesos[i][-1][k] = random.uniform(0, 0.1)
 
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
@@ -53,7 +53,7 @@ class Pajaro:
 		nodoCapa = random.randint(0, NODOS[capa]-1)
 		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
 
-		self.pesos[capa][nodoCapa][nodoAnterior] = random.uniform(0, 1)
+		self.pesos[capa][nodoCapa][nodoAnterior] = random.uniform(-DELTA, DELTA)# random.uniform(0, 1)
 
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
