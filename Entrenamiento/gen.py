@@ -5,7 +5,7 @@ import os
 import operator
 import statistics
 
-POBLACION = 50
+POBLACION = 20
 MUTACION = 10
 DELTA = 0.05
 MINFITNESS = 2500
@@ -27,13 +27,17 @@ class Pajaro:
 				self.pesos[i].append( np.zeros(NODOS[i-1], dtype=float) )
 
 				for k in range(NODOS[i-1]):
-					self.pesos[i][-1][k] = 0 #random.uniform(WMIN, WMAX)
+					self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
+
+		self.pesos.append(1)
 
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
 					self.pesos[i][j][k] = random.choice([p1.pesos[i][j][k], p2.pesos[i][j][k]])
+
+		self.pesos[-1] = random.choice([p1.pesos[-1], p2.pesos[-1]])
 
 		#self.mutarCamino()
 		self.mutarConexion()
@@ -52,14 +56,27 @@ class Pajaro:
 				self.pesos[i][ camino[i] ][ camino[i-1] ] = min(WMAX, nuevo)
 
 			else:
-				self.pesos[i][ camino[i] ][ camino[i-1] ] = max(WMIN, nuevo)		
+				self.pesos[i][ camino[i] ][ camino[i-1] ] = max(WMIN, nuevo)	
+
 
 	def mutarConexion(self):
 		capa  = random.randint(1, CAPAS-1)
 		nodoCapa = random.randint(0, NODOS[capa]-1)
 		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
 
-		self.pesos[capa][nodoCapa][nodoAnterior] = random.uniform(WMIN, WMAX)# random.uniform(0, 1)
+		delta = random.choice([-DELTA, DELTA])		
+		nuevo = self.pesos[capa][nodoCapa][nodoAnterior] + delta
+
+		if delta > 0:
+			self.pesos[capa][nodoCapa][nodoAnterior] = min(WMAX, nuevo)
+		else:
+			self.pesos[capa][nodoCapa][nodoAnterior] = max(WMIN, nuevo)	
+
+			
+	def mutarActivacion(self):
+		delta = random.choice([-0.5, 0.5])		
+		self.pesos[-1] = max(1, self.pesos[-1] + delta)
+
 
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
@@ -106,9 +123,12 @@ def algGenetico():
 
 		# Mutacion
 		for i in range(POBLACION):
-			if MUTACION < random.randint(0, 100):
-				pajaros[i].mutarConexion()
-				#pajaros[i].mutarCamino()
+			if MUTACION < random.randint(0, 100) and i > HIJOS:
+				#pajaros[i].mutarConexion()
+				pajaros[i].mutarCamino()
+
+			if MUTACION < random.randint(0, 100) and i > HIJOS:			
+				pajaros[i].mutarActivacion()		
 
 			pajaros[i].guardar("pesos/peso" + str(genPajaro))
 			genPajaro += 1
