@@ -5,9 +5,15 @@ import os
 import operator
 import statistics
 
-POBLACION = 20
-MUTACION = 10
+POBLACION = 1000
+MUTACIONCAMINO = 0.9
+MUTACIONCONEXION = 0.0
+MUTACIONBIAS = 0.0
+MUTACIONACEPTACION = 0.1
+
 DELTA = 0.05
+DELTABIAS = 1
+
 MINFITNESS = 2500
 HIJOS = int(POBLACION*0.1)
 USARPESOS = False
@@ -31,6 +37,12 @@ class Pajaro:
 
 		self.pesos.append(1)
 
+		self.bias = [ [] ]
+		for i in range(1, CAPAS):
+			self.bias.append( [] )
+			for j in range(NODOS[i]):
+				self.bias[i].append(0)
+
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
@@ -39,15 +51,22 @@ class Pajaro:
 
 		self.pesos[-1] = random.choice([p1.pesos[-1], p2.pesos[-1]])
 
-		#self.mutarCamino()
+		for i in range(1, CAPAS):
+			for j in range(NODOS[i]):
+				self.bias[i][j] = random.choice([p1.bias[i][j], p2.bias[i][j]])
+
+		self.mutarCamino()
 		self.mutarConexion()
+		self.mutarBias()
+
+		self.fitness = 0
 
 	def mutarCamino(self):
 		camino = []
 		for i in range(CAPAS):
 			camino.append( random.randint(0, NODOS[i]-1) )
 
-		delta = random.choice([-DELTA, DELTA])
+		delta = random.uniform(-DELTA, DELTA)
 		
 		for i in range(1, CAPAS):
 			nuevo = self.pesos[i][ camino[i] ][ camino[i-1] ] + delta
@@ -58,26 +77,28 @@ class Pajaro:
 			else:
 				self.pesos[i][ camino[i] ][ camino[i-1] ] = max(WMIN, nuevo)	
 
-
 	def mutarConexion(self):
 		capa  = random.randint(1, CAPAS-1)
 		nodoCapa = random.randint(0, NODOS[capa]-1)
 		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
 
-		delta = random.choice([-DELTA, DELTA])		
+		delta = random.uniform(-DELTA, DELTA)		
 		nuevo = self.pesos[capa][nodoCapa][nodoAnterior] + delta
 
 		if delta > 0:
 			self.pesos[capa][nodoCapa][nodoAnterior] = min(WMAX, nuevo)
 		else:
 			self.pesos[capa][nodoCapa][nodoAnterior] = max(WMIN, nuevo)	
-
-			
+	
 	def mutarActivacion(self):
-		delta = random.choice([-0.5, 0.5])		
+		delta = random.uniform(-0.5, 0.5)		
 		self.pesos[-1] = max(1, self.pesos[-1] + delta)
 
-
+	def mutarBias(self):
+		capa  = random.randint(1, CAPAS-1)
+		nodoCapa = random.randint(0, NODOS[capa]-1)
+		self.bias[capa][nodoCapa] = random.uniform(-DELTABIAS, DELTABIAS)	
+	
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
 			return
@@ -117,18 +138,32 @@ def algGenetico():
 		pajaros.sort(key=operator.attrgetter('fitness'))
 		pajaros.reverse()
 		
+		for i in range(HIJOS):
+			p1 = random.randint(0, HIJOS-1)
+			p2 = (p1 + random.randint(1, HIJOS-2))%HIJOS
+			pajaros[POBLACION - random.randint(1, HIJOS-1)].hijo(pajaros[p1], pajaros[p2])
+
+
+		"""
 		for i in range( int(HIJOS/2) ):
 			pajaros[POBLACION-1 - i  ].hijo(pajaros[i], pajaros[i+1])
 			pajaros[POBLACION-1 - i-1].hijo(pajaros[i], pajaros[i+1])
+		"""
 
 		# Mutacion
 		for i in range(POBLACION):
-			if MUTACION < random.randint(0, 100) and i > HIJOS:
-				#pajaros[i].mutarConexion()
-				pajaros[i].mutarCamino()
+			if i > HIJOS:
+				if random.uniform(0, 1) <= MUTACIONCONEXION:
+					pajaros[i].mutarConexion()
 
-			if MUTACION < random.randint(0, 100) and i > HIJOS:			
-				pajaros[i].mutarActivacion()		
+				if random.uniform(0, 1) <= MUTACIONCAMINO:			
+					pajaros[i].mutarCamino()	
+
+				if random.uniform(0, 1) <= MUTACIONACEPTACION:			
+					pajaros[i].mutarActivacion()
+				
+				if random.uniform(0, 1) <= MUTACIONBIAS:			
+					pajaros[i].mutarBias()
 
 			pajaros[i].guardar("pesos/peso" + str(genPajaro))
 			genPajaro += 1
