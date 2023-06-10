@@ -222,6 +222,10 @@ def mainGame(movementInfo):
 	playerFlapAcc =  -9   # players speed on flapping
 	playerFlapped = False # True when player flaps
 
+	tuberiaW  = IMAGES['pipe'][0].get_width()
+	tuberiaH = IMAGES['pipe'][0].get_height()
+	playerW = IMAGES['player'][0].get_width()
+	playerH = IMAGES['player'][0].get_height()
 
 	while True:
 		for event in pygame.event.get():
@@ -234,8 +238,11 @@ def mainGame(movementInfo):
 					playerFlapped = True
 					SOUNDS['wing'].play()
 
+		tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+		pajaro = {"x": playerx, "y": playery, "velY": playerVelY, "h": playerH, "w": playerW}
+
 		# --------------- IA ----------------
-		if red.red(zip(upperPipes, lowerPipes), playerx, playery, playerVelY):
+		if red.red(tuberia, pajaro):
 			if playery > -2 * IMAGES['player'][0].get_height():
 				playerVelY = playerFlapAcc
 				playerFlapped = True

@@ -1,39 +1,61 @@
 import numpy as np
 import math
 
-ENTRADA = 3
-CAPA = 3
-PESOS1 = np.loadtxt("pesos.txt", dtype=float, max_rows=CAPA)
-PESOS2 = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA, max_rows=1)
-SALIDA = np.loadtxt("pesos.txt", dtype=float, skiprows=CAPA + 1)
+ARCHIVO = "pesos.txt"
+NODOS = np.loadtxt(ARCHIVO, dtype=int, max_rows=1)
+CAPAS = len(NODOS)
 
-def red(tuberias, x, y, vely):
-	entrada = [vely]
+def cargarPesos():
+	skip = 1
+	pesos = [ [] ]
+	for i in range(1, CAPAS):
+		pesos.append( np.loadtxt(ARCHIVO, dtype=float, skiprows=skip, max_rows=NODOS[i]) )
+
+		if pesos[-1].ndim == 1:
+			pesos[-1] = [np.loadtxt(ARCHIVO, dtype=float, skiprows=skip, max_rows=NODOS[i])]
+		skip += NODOS[i]
+
+	pesos.append(np.loadtxt(ARCHIVO, dtype=float, skiprows=skip, max_rows=1))
+	
+	return pesos
+
+def cargarEntrada(tuberias, player):
+	entrada = [player["velY"]]
 
 	# siguiente tuberia
-	for uPipe, lPipe in tuberias:
-		if uPipe["x"] <= x - 30:
+	for uPipe, lPipe in tuberias["tuberias"]:
+		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
-		tubArriba = [uPipe["x"], uPipe["y"]]
-		tubAbajo  = [lPipe["x"], lPipe["y"]]
-		pajaro    = [x, y]
 
-		entrada.append( math.dist(pajaro, tubArriba) )
-		entrada.append( math.dist(pajaro, tubAbajo) )
+		distTubArriba = abs(uPipe["y"] + tuberias["h"]) - player["y"]
+		distTubAbajo  = abs(lPipe["y"] - (player["y"] + player["h"]))
+		distTubFinal  = abs(( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
+
+		entrada.extend( [distTubArriba, distTubAbajo, distTubFinal] )
 		break
 
-	entrada = np.array(entrada)
-	capa = np.zeros(CAPA, dtype=float)
 
-	# Primera capa
-	for i in range(CAPA):
-		capa[i] = np.dot(entrada, PESOS1[i])
+	if len(entrada) != NODOS[0]:
+		entrada.extend( [0 for i in range(NODOS[0] - len(entrada))] )
+
+	return np.array(entrada)
+
+PESOS = cargarPesos()
+
+def red(tuberias, player):
+	# creacion red
+	capas = [cargarEntrada(tuberias, player)]
+	for i in range(1, CAPAS):
+		capas.append( np.zeros(NODOS[i], dtype=float) )
 	
-	# Valor salida
-	salida = np.dot(capa, PESOS2)
+	# calculo red
+	for i in range(1, CAPAS):
+		for j in range(NODOS[i]):
+			capas[i][j] = np.dot(PESOS[i][j], capas[i-1])
 
 	# Salida
-	if salida > SALIDA:
+	
+	if capas[-1][-1] >= PESOS[-1]:
 		return True
 	else:
 		return False

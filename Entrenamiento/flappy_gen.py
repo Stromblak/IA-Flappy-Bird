@@ -204,7 +204,7 @@ def mainGame(pajaros, listaPajaros):
 	restantes     =  {i for i in range(pajaros)}
 	fitness       =  [0 for i in range(pajaros)]
 
-	tuberiaW  = IMAGES['pipe'][0].get_height()
+	tuberiaW  = IMAGES['pipe'][0].get_width()
 	tuberiaH = IMAGES['pipe'][0].get_height()
 	playerW = IMAGES['player'][0].get_width()
 	playerH = IMAGES['player'][0].get_height()
@@ -263,14 +263,14 @@ def mainGame(pajaros, listaPajaros):
 
 
 		restantes -= muertos
-		if not len(restantes) or score == 250:
+		if not len(restantes) or score == 300:
 			return fitness
 
 		playerMidPos = int(SCREENWIDTH * 0.2) + IMAGES['player'][0].get_width() / 2
 		for pipe in upperPipes:
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-			if pipeMidPos <= playerMidPos < pipeMidPos + 6:
-				score += 1
+			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+				score += 0
 				if SONIDO:
 					SOUNDS['point'].play()
 
@@ -317,6 +317,7 @@ def mainGame(pajaros, listaPajaros):
 		if len(upperPipes) > 0 and upperPipes[0]['x'] < -IMAGES['pipe'][0].get_width():
 			upperPipes.pop(0)
 			lowerPipes.pop(0)
+			score += 1
 
 		# draw sprites
 		SCREEN.blit(IMAGES['background'], (0,0))
