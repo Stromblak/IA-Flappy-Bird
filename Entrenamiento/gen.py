@@ -4,19 +4,20 @@ import random
 import os
 import operator
 import statistics
+import  matplotlib.pyplot as plt
 
-POBLACION = 1000
-
-# 			camino conexion activacion bias
-MUTACION 	= [0.0, 	0.3, 	0.1, 	0.2]
-DELTA 		= [0.0, 	0.1, 	0.1, 	0.05]
-
-MINFITNESS = 3000
+POBLACION = 100
 HIJOS = int(POBLACION*0.1)
+
+# 			  camino 	peso activacion bias
+MUTACION 	= [0.0, 	0.1, 	0.0, 	0.1]
+DELTA 		= [0.0,		0.01, 	0.0, 	0.01]
 WMIN, WMAX = -1, 1
+WACTIVACION = 1
 
 RANDOM = True
 USARPESOS = False
+MINFITNESS = 3000
 
 class Pajaro:
 	def __init__(self):
@@ -33,7 +34,7 @@ class Pajaro:
 					for k in range(NODOS[i-1]):
 						self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
 
-		self.pesos.append(0.5)
+		self.pesos.append(WACTIVACION)
 
 		self.bias = [ [] ]
 		for i in range(1, CAPAS):
@@ -55,10 +56,10 @@ class Pajaro:
 				self.bias[i][j] = random.choice([p1.bias[i][j], p2.bias[i][j]])
 
 		self.mutarCamino()
-		self.mutarConexion()
+		self.mutarPeso()
 		self.mutarBias()
 
-		self.fitness = 0
+		self.fitness = p1.fitness + p2.fitness
 
 	def mutarCamino(self):
 		camino = []
@@ -69,7 +70,15 @@ class Pajaro:
 			nuevo = self.pesos[i][ camino[i] ][ camino[i-1] ] + random.uniform(-1, 1) * DELTA[0]
 			self.pesos[i][ camino[i] ][ camino[i-1] ] = np.clip(nuevo, WMIN, WMAX)
 
-	def mutarConexion(self):
+	def mutarPeso(self):
+		for i in range(1, CAPAS):
+			for j in range(NODOS[i]):
+				for k in range(NODOS[i-1]):
+					if random.uniform(0, 1) <= MUTACION[1]:
+						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[1]
+						self.pesos[i][j][k] = np.clip(nuevo, WMIN, WMAX)
+
+		return
 		capa  = random.randint(1, CAPAS-1)
 		nodoCapa = random.randint(0, NODOS[capa]-1)
 		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
@@ -79,7 +88,8 @@ class Pajaro:
 	
 	def mutarActivacion(self):
 		delta = random.uniform(-1, 1) * DELTA[2]	
-		self.pesos[-1] = max(1, self.pesos[-1] + delta)
+		self.pesos[-1] += delta
+		#self.pesos[-1] = max(1, self.pesos[-1] + delta)
 
 	def mutarBias(self):
 		capa  = random.randint(1, CAPAS-1)
@@ -89,15 +99,19 @@ class Pajaro:
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
 			return
-				
+
 		f = open(archivo + "-" + str(self.fitness) + ".txt", 'w')
 
-		f.write( " ".join( [str(v) for v in NODOS]) + "\n")
+		f.write( " ".join( [str(n) for n in NODOS]) + "\n")
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
-				f.write( " ".join( [str(v) for v in self.pesos[i][j]]) + "\n")
+				f.write( " ".join( [str(p) for p in self.pesos[i][j]]) + "\n")
 
 		f.write(str(self.pesos[-1]))
+
+		for i in range(1, CAPAS):
+			f.write( " ".join( [str(b) for b in self.bias[i]]) + "\n")
+
 		f.close()	
 
 	def cargar(self, archivo):
@@ -115,60 +129,85 @@ class Pajaro:
 		self.pesos = pesos
 
 
-def algGenetico():
-	main2()
-	genPajaro = 0
-
-	# Creacion poblacion
-	if USARPESOS:
-		dir_list = os.listdir("./pesos")
-		pajaros = [ Pajaro( "./pesos/" + dir_list[i] ) for i in range(len(dir_list)) ]
-		pajaros.extend( [ Pajaro(" ") for i in range(len(dir_list), POBLACION) ])
-	
-	else:
-		pajaros = [ Pajaro() for i in range(POBLACION) ]
-
-
-	while True:
-		# Calculo fitness
-		fitness = mainGame(POBLACION, pajaros)
-		for i in range(POBLACION):
-			pajaros[i].fitness = fitness[i]
-
-		print(statistics.mean(fitness), max(fitness))
-
-		# Descedencia
-		pajaros.sort(key=operator.attrgetter('fitness'))
-		pajaros.reverse()
+class AlgGenetico():
+	def __init__(self):
+		main2()
+		self.numPajaro = 0
+		self.pajaros = [ Pajaro() for i in range(POBLACION) ]
+		if USARPESOS:
+			dir_list = os.listdir("./pesos")
+			for i in range(min(len(dir_list), POBLACION)):
+				self.pajaros[i].cargar("./pesos/" + dir_list[i])
 		
+		self.fitnessMaxGen = []
+		self.fitnessPromedioGen = []
+
+	def ciclo(self):
+		self.calculoFitness()
+		self.descendencia()
+		self.mutacion()
+
+	def calculoFitness(self):
+		fitness = mainGame(POBLACION, self.pajaros)
+		
+		for i in range(POBLACION):
+			self.pajaros[i].fitness = fitness[i] #(pajaros[i].fitness + fitness[i])/2
+			self.pajaros[i].guardar("pesos/peso" + str(self.numPajaro))		
+			self.numPajaro += 1
+
+		# [mejor fitness, ..., peor fitness]
+		self.pajaros.sort(reverse=True, key=operator.attrgetter('fitness'))
+		# print([p.fitness for p in self.pajaros])
+
+		self.fitnessMaxGen.append(self.pajaros[0].fitness)
+		self.fitnessPromedioGen.append(statistics.mean(fitness))
+		print(self.fitnessPromedioGen[-1], self.fitnessMaxGen[-1])
+
+	def descendencia(self):
+		self.pajaros[-1].hijo(self.pajaros[0], self.pajaros[0])
 		for i in range(HIJOS):
 			p1 = random.randint(0, HIJOS-1)
 			p2 = (p1 + random.randint(1, HIJOS-2))%HIJOS
-			pajaros[POBLACION - random.randint(1, HIJOS-1)].hijo(pajaros[p1], pajaros[p2])
+			self.pajaros[POBLACION-2 - i].hijo(self.pajaros[p1], self.pajaros[p2])
+
 		"""
 		for i in range( int(HIJOS/2) ):
 			pajaros[POBLACION-1 - i  ].hijo(pajaros[i], pajaros[i+1])
 			pajaros[POBLACION-1 - i-1].hijo(pajaros[i], pajaros[i+1])
+		"""		
 
-		"""
-
-		# Mutacion
+	def mutacion(self):
 		for i in range(POBLACION):
 			if i > HIJOS:
-				if random.uniform(0, 1) <= MUTACION[0]:			
-					pajaros[i].mutarCamino()	
+				if MUTACION[0] <= random.uniform(0, 1):			
+					self.pajaros[i].mutarCamino()	
 
-				if random.uniform(0, 1) <= MUTACION[1]:
-					pajaros[i].mutarConexion()
+				if MUTACION[1] <= random.uniform(0, 1):
+					self.pajaros[i].mutarPeso()
 
-				if random.uniform(0, 1) <= MUTACION[2]:			
-					pajaros[i].mutarActivacion()
+				if MUTACION[2] <= random.uniform(0, 1):			
+					self.pajaros[i].mutarActivacion()
 				
-				if random.uniform(0, 1) <= MUTACION[3]:			
-					pajaros[i].mutarBias()
+				if MUTACION[3] <= random.uniform(0, 1):			
+					self.pajaros[i].mutarBias()		
 
-			pajaros[i].guardar("pesos/peso" + str(genPajaro))
-			genPajaro += 1
+	def grafico(self):
+		x = [i for i in range(len(self.fitnessMaxGen))]
+		plt.plot(x, self.fitnessMaxGen, label = "Mejor")
+		plt.plot(x, self.fitnessPromedioGen, label = "Promedio")
+
+		plt.xlabel('Generacion')
+		plt.ylabel('Fitness')
+
+		plt.legend()
+		plt.show()
 
 
-algGenetico()
+instancia = AlgGenetico()
+while True:
+	try:
+		instancia.ciclo()
+
+	except KeyboardInterrupt:
+		instancia.grafico()
+		sys.exit()
