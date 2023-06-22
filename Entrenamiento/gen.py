@@ -6,13 +6,13 @@ import operator
 import statistics
 import  matplotlib.pyplot as plt
 
-POBLACION = 100
+POBLACION = 50
 HIJOS = int(POBLACION*0.1)
 
 # 			  camino 	peso activacion bias
 MUTACION 	= [0.0, 	0.1, 	0.0, 	0.1]
-DELTA 		= [0.0,		0.01, 	0.0, 	0.01]
-WMIN, WMAX = -1, 1
+DELTA 		= [0.0,		0.05, 	0.0, 	0.01]
+WMIN, WMAX = -10, 10
 WACTIVACION = 1
 
 RANDOM = True
@@ -35,6 +35,8 @@ class Pajaro:
 						self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
 
 		self.pesos.append(WACTIVACION)
+
+		self.pesos[-1] = 1
 
 		self.bias = [ [] ]
 		for i in range(1, CAPAS):
@@ -74,7 +76,7 @@ class Pajaro:
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
-					if random.uniform(0, 1) <= MUTACION[1]:
+					if MUTACION[1] <= random.uniform(0, 1):
 						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[1]
 						self.pesos[i][j][k] = np.clip(nuevo, WMIN, WMAX)
 
@@ -108,6 +110,7 @@ class Pajaro:
 				f.write( " ".join( [str(p) for p in self.pesos[i][j]]) + "\n")
 
 		f.write(str(self.pesos[-1]))
+		f.write("\n")
 
 		for i in range(1, CAPAS):
 			f.write( " ".join( [str(b) for b in self.bias[i]]) + "\n")

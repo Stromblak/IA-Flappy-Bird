@@ -2,11 +2,11 @@ import numpy as np
 import math
 import random
 
-NODOS = [4, 2, 1]
+NODOS = [4, 3, 1]
 CAPAS = len(NODOS)
 
 def sigmoid(w, b):
-	return w + b
+	return w
 	#return 1/(1 + np.exp(-w + b))
 
 def procesarEntrada(tuberias, player):
@@ -18,9 +18,9 @@ def procesarEntrada(tuberias, player):
 			continue
 		
 
-		distTubArriba = abs(uPipe["y"] + tuberias["h"]) - player["y"]
-		distTubAbajo  = abs(lPipe["y"] - (player["y"] + player["h"]))
-		distTubFinal  = abs(( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
+		distTubArriba = (uPipe["y"] + tuberias["h"] - player["y"])
+		distTubAbajo  = (lPipe["y"] - (player["y"] + player["h"]))
+		distTubFinal  = (( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
 
 		entrada.extend( [distTubArriba, distTubAbajo, distTubFinal] )
 		break

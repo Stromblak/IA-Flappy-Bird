@@ -190,6 +190,10 @@ def mainGame(pajaros, listaPajaros):
 		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
 	]
 
+	for uPipe, lPipe in zip(upperPipes, lowerPipes):
+		uPipe['x'] -= 250
+		lPipe['x'] -= 250
+
 	# player velocity, max velocity, downward acceleration, acceleration on flap
 	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
 	playerMaxVelY =  10   # max vel along Y, max descend speed
