@@ -27,9 +27,9 @@ def cargarEntrada(tuberias, player):
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		distTubArriba = abs(uPipe["y"] + tuberias["h"]) - player["y"]
-		distTubAbajo  = abs(lPipe["y"] - (player["y"] + player["h"]))
-		distTubFinal  = abs(( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
+		distTubArriba = (uPipe["y"] + tuberias["h"]) - player["y"]
+		distTubAbajo  = (lPipe["y"] - (player["y"] + player["h"]))
+		distTubFinal  = (( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
 
 		entrada.extend( [distTubArriba, distTubAbajo, distTubFinal] )
 		break

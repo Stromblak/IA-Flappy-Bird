@@ -2,7 +2,8 @@ import numpy as np
 import math
 import random
 
-NODOS = [4, 3, 1]
+
+NODOS = [3, 3, 1]
 CAPAS = len(NODOS)
 
 def sigmoid(w, b):
@@ -16,21 +17,14 @@ def procesarEntrada(tuberias, player):
 	for uPipe, lPipe in tuberias["tuberias"]:
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
-		
 
 		distTubArriba = (uPipe["y"] + tuberias["h"] - player["y"])
-		distTubAbajo  = (lPipe["y"] - (player["y"] + player["h"]))
+		distTubAbajo  = (lPipe["y"] - (player["y"] + player["h"]))		
 		distTubFinal  = (( min(150, uPipe["x"]) + tuberias["w"]) - player["x"])
-
-		entrada.extend( [distTubArriba, distTubAbajo, distTubFinal] )
+		entrada.extend( [distTubArriba, distTubAbajo] )
+		
 		break
 
-		tubArriba = [ uPipe["x"] + tuberias["w"], uPipe["y"] + tuberias["h"] ]
-		tubAbajo = [ lPipe["x"] + tuberias["w"], lPipe["y"] ]
-		pajaro = [ player["x"] + player["w"]/2, player["y"] + player["h"]/2 ]
-
-		entrada.extend( [math.dist(pajaro, tubArriba), math.dist(pajaro, tubAbajo)] )
-		break
 
 	if len(entrada) != NODOS[0]:
 		entrada.extend( [0 for i in range(NODOS[0] - len(entrada))] )
@@ -49,11 +43,16 @@ def red(tuberias, player, paj):
 			capas[i][j] = sigmoid( np.dot(paj.pesos[i][j], capas[i-1]), paj.bias[i][j] )
 
 	# Salida	
-	
+
+
+
 	if capas[-1][-1] >= paj.pesos[-1]:
 		return True
 	
 	return False
 
-	if capas[-1][-1] <= random.uniform(0, 1):		
+	if 1/(1 + np.exp(-capas[-1][-1])) <= random.uniform(0, 1):		
 		return True
+	
+	return False
+

@@ -183,7 +183,7 @@ def showWelcomeAnimation():
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-
+distancia = 20
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']
@@ -199,13 +199,13 @@ def mainGame(movementInfo):
 	# list of upper pipes
 	upperPipes = [
 		{'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[0]['y']},
+		{'x': SCREENWIDTH + 200 + ((SCREENWIDTH + distancia)/ 2), 'y': newPipe2[0]['y']},
 	]
 
 	# list of lowerpipe
 	lowerPipes = [
 		{'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
+		{'x': SCREENWIDTH + 200 + ((SCREENWIDTH + distancia) / 2), 'y': newPipe2[1]['y']},
 	]
 
 	dt = FPSCLOCK.tick(FPS)/1000
@@ -412,7 +412,7 @@ def getRandomPipe():
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()
-	pipeX = SCREENWIDTH + 10
+	pipeX = SCREENWIDTH + 10 + distancia
 
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe

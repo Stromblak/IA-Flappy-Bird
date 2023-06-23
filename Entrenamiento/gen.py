@@ -6,13 +6,13 @@ import operator
 import statistics
 import  matplotlib.pyplot as plt
 
-POBLACION = 50
+POBLACION = 20
 HIJOS = int(POBLACION*0.1)
 
 # 			  camino 	peso activacion bias
-MUTACION 	= [0.0, 	0.1, 	0.0, 	0.1]
+MUTACION 	= [0.0, 	0.05, 	0.0, 	0.1]
 DELTA 		= [0.0,		0.05, 	0.0, 	0.01]
-WMIN, WMAX = -10, 10
+WMIN, WMAX = -1, 1
 WACTIVACION = 1
 
 RANDOM = True
@@ -43,9 +43,6 @@ class Pajaro:
 			self.bias.append( np.zeros(NODOS[i], dtype=float) )
 
 	def hijo(self, p1, p2):
-		if p1.fitness < 100 or p1.fitness < 100:
-			return
-
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
@@ -57,7 +54,6 @@ class Pajaro:
 			for j in range(NODOS[i]):
 				self.bias[i][j] = random.choice([p1.bias[i][j], p2.bias[i][j]])
 
-		self.mutarCamino()
 		self.mutarPeso()
 		self.mutarBias()
 
@@ -170,18 +166,11 @@ class AlgGenetico():
 		self.pajaros[-1].hijo(self.pajaros[0], self.pajaros[0])
 		for i in range(HIJOS):
 			p1 = random.randint(0, HIJOS-1)
-			p2 = (p1 + random.randint(1, HIJOS-2))%HIJOS
+			p2 = (p1 + random.randint(1, HIJOS-1))%HIJOS
 			self.pajaros[POBLACION-2 - i].hijo(self.pajaros[p1], self.pajaros[p2])
 
-		"""
-		for i in range( int(HIJOS/2) ):
-			pajaros[POBLACION-1 - i  ].hijo(pajaros[i], pajaros[i+1])
-			pajaros[POBLACION-1 - i-1].hijo(pajaros[i], pajaros[i+1])
-		"""		
-
 	def mutacion(self):
-		for i in range(POBLACION):
-			if i > HIJOS:
+		for i in range(1, POBLACION):
 				if MUTACION[0] <= random.uniform(0, 1):			
 					self.pajaros[i].mutarCamino()	
 

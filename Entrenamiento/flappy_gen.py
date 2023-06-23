@@ -164,6 +164,9 @@ def main2():
 
 
 # cosa principal
+distInicio = -200
+distancia = 20
+
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
 
@@ -180,19 +183,16 @@ def mainGame(pajaros, listaPajaros):
 
 	# list of upper pipes
 	upperPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[0]['y']},
+		{'x': SCREENWIDTH + 200 + distInicio, 'y': newPipe1[0]['y']},
+		{'x': SCREENWIDTH + 200 + distInicio+ ((SCREENWIDTH + distancia ) / 2), 'y': newPipe2[0]['y']},
 	]
 
 	# list of lowerpipe
 	lowerPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
+		{'x': SCREENWIDTH + 200 + distInicio, 'y': newPipe1[1]['y']},
+		{'x': SCREENWIDTH + 200 + distInicio+ ((SCREENWIDTH + distancia) / 2 ), 'y': newPipe2[1]['y']},
 	]
 
-	for uPipe, lPipe in zip(upperPipes, lowerPipes):
-		uPipe['x'] -= 250
-		lPipe['x'] -= 250
 
 	# player velocity, max velocity, downward acceleration, acceleration on flap
 	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
@@ -213,7 +213,7 @@ def mainGame(pajaros, listaPajaros):
 	playerW = IMAGES['player'][0].get_width()
 	playerH = IMAGES['player'][0].get_height()
 	tuberia = {"tuberias": 1, "h": tuberiaH, "w": tuberiaW}
-	dt = FPSCLOCK.tick(FPS)/1000.0
+	dt =  FPSCLOCK.tick(FPS)/1000.0
 
 	while True:
 		for event in pygame.event.get():
@@ -268,6 +268,9 @@ def mainGame(pajaros, listaPajaros):
 
 		restantes -= muertos
 		if not len(restantes) or score == 300:
+			return fitness
+		
+		if len(restantes) == 1 and score == 5:
 			return fitness
 
 		playerMidPos = int(SCREENWIDTH * 0.2) + IMAGES['player'][0].get_width() / 2
@@ -377,7 +380,7 @@ def getRandomPipe():
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()
-	pipeX = SCREENWIDTH + 10
+	pipeX = SCREENWIDTH + 10 + distancia
 
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
