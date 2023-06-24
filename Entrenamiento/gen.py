@@ -19,6 +19,10 @@ RANDOM = True
 USARPESOS = False
 MINFITNESS = 3000
 
+def prob(p):
+	if random.uniform(0, 1) < p: return True
+	else: return False
+
 class Pajaro:
 	def __init__(self):
 		self.fitness = 0
@@ -72,7 +76,7 @@ class Pajaro:
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
-					if MUTACION[1] <= random.uniform(0, 1):
+					if prob(MUTACION[1]):
 						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[1]
 						self.pesos[i][j][k] = np.clip(nuevo, WMIN, WMAX)
 
@@ -171,16 +175,16 @@ class AlgGenetico():
 
 	def mutacion(self):
 		for i in range(1, POBLACION):
-				if MUTACION[0] <= random.uniform(0, 1):			
+				if prob(MUTACION[0]):			
 					self.pajaros[i].mutarCamino()	
 
-				if MUTACION[1] <= random.uniform(0, 1):
+				if prob(MUTACION[1]):
 					self.pajaros[i].mutarPeso()
 
-				if MUTACION[2] <= random.uniform(0, 1):			
+				if prob(MUTACION[2]):			
 					self.pajaros[i].mutarActivacion()
 				
-				if MUTACION[3] <= random.uniform(0, 1):			
+				if prob(MUTACION[3]):			
 					self.pajaros[i].mutarBias()		
 
 	def grafico(self):
