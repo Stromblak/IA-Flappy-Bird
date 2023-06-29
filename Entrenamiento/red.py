@@ -3,10 +3,10 @@ import math
 import random
 
 
-NODOS = [3, 3, 1]
+NODOS = [3 + 1, 3 + 1, 1]
 CAPAS = len(NODOS)
 
-def sigmoid(w, b):
+def sigmoid(w):
 	return w
 	#return 1/(1 + np.exp(-w + b))
 
@@ -31,28 +31,21 @@ def procesarEntrada(tuberias, player):
 
 	return np.array(entrada)
 
+
 def red(tuberias, player, paj):
 	# creacion red
 	capas = [procesarEntrada(tuberias, player)]
 	for i in range(1, CAPAS):
 		capas.append( np.zeros(NODOS[i], dtype=float) )
-	
+		capas[-1][0] = 1
+
 	# calculo red
 	for i in range(1, CAPAS):
 		for j in range(NODOS[i]):
-			capas[i][j] = sigmoid( np.dot(paj.pesos[i][j], capas[i-1]), paj.bias[i][j] )
+			capas[i][j] = sigmoid( np.dot(paj.pesos[i][j], capas[i-1]) )
 
 	# Salida	
-
-
-
 	if capas[-1][-1] >= paj.pesos[-1]:
 		return True
 	
 	return False
-
-	if 1/(1 + np.exp(-capas[-1][-1])) <= random.uniform(0, 1):		
-		return True
-	
-	return False
-

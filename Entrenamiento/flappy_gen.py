@@ -166,6 +166,7 @@ def main2():
 # cosa principal
 distInicio = -200
 distancia = 20
+tubFin = 300
 
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
@@ -207,6 +208,7 @@ def mainGame(pajaros, listaPajaros):
 
 	restantes     =  {i for i in range(pajaros)}
 	fitness       =  [0 for i in range(pajaros)]
+	distMuerte    =  [0 for i in range(pajaros)]
 
 	tuberiaW  = IMAGES['pipe'][0].get_width()
 	tuberiaH = IMAGES['pipe'][0].get_height()
@@ -243,11 +245,12 @@ def mainGame(pajaros, listaPajaros):
 						SOUNDS['wing'].play()	
 
 			# check for crash here
-			crashTest = checkCrash({'x': playerx[i], 'y': playery[i], 'index': playerIndex},
+			crashTest, dist = checkCrash({'x': playerx[i], 'y': playery[i], 'index': playerIndex},
 								upperPipes, lowerPipes)
 		
 			if crashTest[0]:
 				muertos.add(i)
+				distMuerte[i] = dist
 
 			fitness[i] += 1
 
@@ -267,11 +270,11 @@ def mainGame(pajaros, listaPajaros):
 
 
 		restantes -= muertos
-		if not len(restantes) or score == 300:
-			return fitness
+		if not len(restantes) or score == tubFin:
+			return fitness, distMuerte
 		
 		if len(restantes) == 1 and score == 5:
-			return fitness
+			return fitness, distMuerte
 
 		playerMidPos = int(SCREENWIDTH * 0.2) + IMAGES['player'][0].get_width() / 2
 		for pipe in upperPipes:
@@ -336,6 +339,7 @@ def mainGame(pajaros, listaPajaros):
 		SCREEN.blit(IMAGES['base'], (basex, BASEY))
 		# print score so player overlaps the score
 		showScore(score)
+		showPoblacion(len(restantes))
 
 		# Player rotation has a threshold
 		visibleRot = playerRotThr
@@ -363,6 +367,22 @@ def showScore(score):
 	for digit in scoreDigits:
 		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
 		Xoffset += IMAGES['numbers'][digit].get_width()
+
+def showPoblacion(score):
+	"""displays score in center of screen"""
+	scoreDigits = [int(x) for x in list(str(score))]
+	totalWidth = 0 # total width of all numbers to be printed
+
+	for digit in scoreDigits:
+		totalWidth += IMAGES['numbers'][digit].get_width()
+
+	Xoffset = (SCREENWIDTH - totalWidth) / 2
+
+	for digit in scoreDigits:
+		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.02))
+		Xoffset += IMAGES['numbers'][digit].get_width()
+
+			
 
 def playerShm(playerShm):
 	"""oscillates the value of playerShm['val'] between 8 and -8"""
@@ -393,15 +413,19 @@ def checkCrash(player, upperPipes, lowerPipes):
 	player['w'] = IMAGES['player'][0].get_width()
 	player['h'] = IMAGES['player'][0].get_height()
 
+	distMuerte = 0
+
 	# if player crashes into ground
 	if player['y'] + player['h'] >= BASEY - 1:
-		return [True, True]
+		distMuerte = 2000
+		return [True, True], distMuerte
 	
 	elif player['y'] + player['h'] <= 0:
-		return [True, True]
+		
+		distMuerte = 1000
+		return [True, True], distMuerte
 	
 	else:
-
 		playerRect = pygame.Rect(player['x'], player['y'],
 					player['w'], player['h'])
 		pipeW = IMAGES['pipe'][0].get_width()
@@ -421,10 +445,13 @@ def checkCrash(player, upperPipes, lowerPipes):
 			uCollide = pixelCollision(playerRect, uPipeRect, pHitMask, uHitmask)
 			lCollide = pixelCollision(playerRect, lPipeRect, pHitMask, lHitmask)
 
-			if uCollide or lCollide:
-				return [True, False]
 
-	return [False, False]
+			if uCollide or lCollide:
+				distMuerte = abs( (lPipe['y'] - PIPEGAPSIZE/2) - (player['y'] + player['h']/2))
+
+				return [True, False], distMuerte
+
+	return [False, False], distMuerte
 
 def pixelCollision(rect1, rect2, hitmask1, hitmask2):
 	"""Checks if two objects collide and not just their rects"""

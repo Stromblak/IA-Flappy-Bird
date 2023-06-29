@@ -6,12 +6,12 @@ import operator
 import statistics
 import  matplotlib.pyplot as plt
 
-POBLACION = 20
+POBLACION = 50
 HIJOS = int(POBLACION*0.1)
 
-# 			  camino 	peso activacion bias
-MUTACION 	= [0.0, 	0.05, 	0.0, 	0.1]
-DELTA 		= [0.0,		0.05, 	0.0, 	0.01]
+# 			  camino 	activacion
+MUTACION 	= [0.5, 	0.1]
+DELTA 		= [0.02, 	0.02]
 WMIN, WMAX = -1, 1
 WACTIVACION = 1
 
@@ -26,6 +26,7 @@ def prob(p):
 class Pajaro:
 	def __init__(self):
 		self.fitness = 0
+		self.distMuerte = 0
 
 		self.pesos = [ [] ]
 		for i in range(1, CAPAS):
@@ -36,15 +37,11 @@ class Pajaro:
 
 				if RANDOM:
 					for k in range(NODOS[i-1]):
-						self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
+						self.pesos[i][-1][k] = random.uniform(-1, 1)
 
 		self.pesos.append(WACTIVACION)
 
 		self.pesos[-1] = 1
-
-		self.bias = [ [] ]
-		for i in range(1, CAPAS):
-			self.bias.append( np.zeros(NODOS[i], dtype=float) )
 
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
@@ -54,49 +51,22 @@ class Pajaro:
 
 		self.pesos[-1] = random.choice([p1.pesos[-1], p2.pesos[-1]])
 
-		for i in range(1, CAPAS):
-			for j in range(NODOS[i]):
-				self.bias[i][j] = random.choice([p1.bias[i][j], p2.bias[i][j]])
-
 		self.mutarPeso()
-		self.mutarBias()
 
 		self.fitness = p1.fitness + p2.fitness
-
-	def mutarCamino(self):
-		camino = []
-		for i in range(CAPAS):
-			camino.append( random.randint(0, NODOS[i]-1) )
-
-		for i in range(1, CAPAS):
-			nuevo = self.pesos[i][ camino[i] ][ camino[i-1] ] + random.uniform(-1, 1) * DELTA[0]
-			self.pesos[i][ camino[i] ][ camino[i-1] ] = np.clip(nuevo, WMIN, WMAX)
 
 	def mutarPeso(self):
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
 					if prob(MUTACION[1]):
-						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[1]
+						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[0]
 						self.pesos[i][j][k] = np.clip(nuevo, WMIN, WMAX)
 
 		return
-		capa  = random.randint(1, CAPAS-1)
-		nodoCapa = random.randint(0, NODOS[capa]-1)
-		nodoAnterior = random.randint(0, NODOS[capa-1]-1)
-
-		nuevo = self.pesos[capa][nodoCapa][nodoAnterior] + random.uniform(-1, 1) * DELTA[1]
-		self.pesos[capa][nodoCapa][nodoAnterior] = np.clip(nuevo, WMIN, WMAX)
 	
 	def mutarActivacion(self):
-		delta = random.uniform(-1, 1) * DELTA[2]	
-		self.pesos[-1] += delta
-		#self.pesos[-1] = max(1, self.pesos[-1] + delta)
-
-	def mutarBias(self):
-		capa  = random.randint(1, CAPAS-1)
-		nodoCapa = random.randint(0, NODOS[capa]-1)
-		self.bias[capa][nodoCapa] += random.uniform(-1, 1) * DELTA[3]
+		self.pesos[-1] += random.uniform(-1, 1) * DELTA[1]	
 
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
@@ -110,10 +80,6 @@ class Pajaro:
 				f.write( " ".join( [str(p) for p in self.pesos[i][j]]) + "\n")
 
 		f.write(str(self.pesos[-1]))
-		f.write("\n")
-
-		for i in range(1, CAPAS):
-			f.write( " ".join( [str(b) for b in self.bias[i]]) + "\n")
 
 		f.close()	
 
@@ -151,16 +117,19 @@ class AlgGenetico():
 		self.mutacion()
 
 	def calculoFitness(self):
-		fitness = mainGame(POBLACION, self.pajaros)
+		fitness, distPipe = mainGame(POBLACION, self.pajaros)
 		
 		for i in range(POBLACION):
-			self.pajaros[i].fitness = fitness[i] #(pajaros[i].fitness + fitness[i])/2
+			self.pajaros[i].fitness = fitness[i]
+			self.pajaros[i].distMuerte = distPipe[i]
 			self.pajaros[i].guardar("pesos/peso" + str(self.numPajaro))		
 			self.numPajaro += 1
-
+		
 		# [mejor fitness, ..., peor fitness]
-		self.pajaros.sort(reverse=True, key=operator.attrgetter('fitness'))
-		# print([p.fitness for p in self.pajaros])
+		self.pajaros.sort(key=lambda x: (-x.fitness, x.distMuerte))
+
+		# print([ [p.fitness, p.distMuerte] for p in self.pajaros])
+
 
 		self.fitnessMaxGen.append(self.pajaros[0].fitness)
 		self.fitnessPromedioGen.append(statistics.mean(fitness))
@@ -175,17 +144,12 @@ class AlgGenetico():
 
 	def mutacion(self):
 		for i in range(1, POBLACION):
-				if prob(MUTACION[0]):			
-					self.pajaros[i].mutarCamino()	
-
-				if prob(MUTACION[1]):
+				if prob(MUTACION[0]):
 					self.pajaros[i].mutarPeso()
 
-				if prob(MUTACION[2]):			
+				if prob(MUTACION[1]):			
 					self.pajaros[i].mutarActivacion()
-				
-				if prob(MUTACION[3]):			
-					self.pajaros[i].mutarBias()		
+
 
 	def grafico(self):
 		x = [i for i in range(len(self.fitnessMaxGen))]
