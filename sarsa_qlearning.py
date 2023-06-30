@@ -40,35 +40,36 @@ def getR(state, action):
     # state[0] = playery (altura)
     # state[1] = altura donde comienza el pipe inferior
     # gap = 100
+    playery = state[0]
     pipebot = state[1]
-
+   
     # si esta un poco por encima del pipe inferior (altura +o- perfecta)
-    if state[0] == pipebot - 5 and action:
+    if playery == pipebot - 4 and action:
         reward -= 1
-    elif state[0] == pipebot - 5 and not action:
+    elif playery == pipebot - 4 and not action:
         reward += 1
     # si esta bajo la pipe inferior (debe saltar)
-    elif state[0] > pipebot and action:
+    elif playery > pipebot and action:
         reward += 1
-    elif state[0] > pipebot and not action:
+    elif playery > pipebot and not action:
         reward -= 1
     # si esta sobre la pipe inferior y el gap (no debe saltar)
-    elif state[0] < pipebot - 5 and action:
+    elif playery < pipebot - 4 and action:
         reward -= 1
-    elif state[0] < pipebot - 5 and not action:
+    elif playery < pipebot - 4 and not action:
         reward += 1
     # si esta casi tocando el cielo
-    if state[0] < 5 and action:
+    if playery < 5 and action:
         reward -= 10
-    print(state[0], pipebot, reward)
+    print(playery, pipebot, reward)
     return reward
 
 
 # el estado actual del juego
 # altura del pajaro y las pipes, dividido por 10 para tener menos estados,
 # ya que no importa si la altura es unos px mas o menos
-def getState(playery, upperPipe, lowerPipe):
-    state = (playery // 10, lowerPipe // 10)
+def getState(playery, upperPipe, lowerPipeY, lowerPipeX):
+    state = (playery // 10, lowerPipeY // 10)
     return state
 
 
@@ -113,9 +114,8 @@ def qLearning(state, prevAction, R, newState):
     S2 = hash(newState)
     currentQ = Q.get((S, prevAction), 0.0)
 
-    # implementar max alfa A, algo ???
-    nextQ = Q.get((S2, a), 0.0)
+    maxQ = max([Q.get((S2, action), 0.0) for action in [True, False]])
 
-    newQ = currentQ + a * (R + g * nextQ - currentQ)
+    newQ = currentQ + a * (R + g * maxQ - currentQ)
 
     Q[(S, prevAction)] = newQ

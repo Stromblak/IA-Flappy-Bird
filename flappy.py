@@ -7,7 +7,7 @@ from ia import *
 from sarsa_qlearning import *
 
 sys.setrecursionlimit(10000)
-FPS = 60
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
@@ -236,9 +236,10 @@ def mainGame(movementInfo):
 	ciclo = 0
 	
 	sarsaOqlearning = 1
+	i=0
 	saltar=False
 	# Inicializar SARSA/Q-Learning con S
-	state = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
+	state = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
 	if sarsaOqlearning:
 		prevAction = egreedy(state)
@@ -284,6 +285,10 @@ def mainGame(movementInfo):
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 				score += 1
+				if i==0:
+					i=1
+				else:
+					i=0
 				SOUNDS['point'].play()
 
 		# playerIndex basex change
@@ -321,13 +326,15 @@ def mainGame(movementInfo):
 				playerVelY = playerFlapAcc
 				playerFlapped = True
 
-		# SARSA/Q-Learning
+		# SARSA
 		if sarsaOqlearning:
         	# ejecutar A
 			saltar = prevAction
 			
 			# observar R, S'
-			newState = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
+			newState = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
+			print(lowerPipes[0]['y'])
+			print(lowerPipes[1]['y'])
 			R = getR(newState,prevAction)
 
 			# elegir A' de un S' (con epsilon-greedy)
@@ -349,7 +356,7 @@ def mainGame(movementInfo):
 			saltar = prevAction
 
 			# observar R, S'
-			newState = getState(playery, upperPipes[0]['y'], lowerPipes[0]['y'])
+			newState = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
 			R = getR(newState, prevAction)
 
 			# aplicar formula Q
