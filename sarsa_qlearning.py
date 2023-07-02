@@ -1,80 +1,63 @@
 import random
-import hashlib
 from flappy import *
+import json
 
 Q = {}  # Diccionario para almacenar Q's, guarda un par estado y accion (Q es el valor)
-a = 1  # alfa: Tasa de aprendizaje
-g = 0  # gamma: Factor de descuento
-e = 0  # epsilon: para e-greedy
+a = 0.95  # alfa: Tasa de aprendizaje
+g = 0.05  # gamma: Factor de descuento
+e = 0.01  # epsilon: para e-greedy
+
+try:
+    with open("q_values.json", "r") as file:
+        Q_loaded = json.load(file)
+    Q = {eval(key): value for key, value in Q_loaded.items()}
+except FileNotFoundError:
+    pass
 
 
 def getR(state, action):
     reward = 0
-    # if state[0] == SCREENHEIGHT / 2:
-    #     reward = 0
-    # elif state[0] < SCREENHEIGHT / 2 and action:
-    #     reward += -1
-    # elif state[0] < SCREENHEIGHT / 2 and not action:
-    #     reward += 1
-    # elif state[0] > SCREENHEIGHT / 2 and action:
-    #     reward += 1
-    # elif state[0] > SCREENHEIGHT / 2 and not action:
-    #     reward += -1
-    # pipe_height = 320  # Altura de la tubería
+    ydiff = state[0]
+    lowerpipeX = state[1]
+    vel = state[2]
 
-    # pipetop = state[1] + 320
-    # pipebot = state[2]
-    # print(state[0], pipetop, pipebot)
-
-    # # si el pajaro esta a la altura del pipe superior
-    # if state[0] <= pipetop and action:
-    #     reward -= 1
-    # elif state[0] <= pipetop and not action:
-    #     reward += 1
-    # # si el pajaro esta a la altura del pipe inferior
-    # if state[0] >= pipebot and action:
-    #     reward += 1
-    # elif state[0] >= pipebot and not action:
-    #     reward -= 1
-
-    # state[0] = playery (altura)
-    # state[1] = altura donde comienza el pipe inferior
-    # gap = 100
-    playery = state[0]
-    pipebot = state[1]
-   
     # si esta un poco por encima del pipe inferior (altura +o- perfecta)
-    if playery == pipebot - 4 and action:
+    if ydiff == 4 and action:
         reward -= 1
-    elif playery == pipebot - 4 and not action:
+    elif ydiff == 4 and not action:
         reward += 1
     # si esta bajo la pipe inferior (debe saltar)
-    elif playery > pipebot and action:
+    elif ydiff > 0 and action:
         reward += 1
-    elif playery > pipebot and not action:
+    elif ydiff > 0 and not action:
         reward -= 1
     # si esta sobre la pipe inferior y el gap (no debe saltar)
-    elif playery < pipebot - 4 and action:
+    elif ydiff < -4 and action:
         reward -= 1
-    elif playery < pipebot - 4 and not action:
+    elif ydiff < -4 and not action:
         reward += 1
     # si esta casi tocando el cielo
-    if playery < 5 and action:
-        reward -= 10
-    print(playery, pipebot, reward)
+    if ydiff > 4 and action:
+        reward -= 100
+    if ydiff > 4 and not action:
+        reward += 2
+    # si es menor a 5 (cerca de la tuberia) y vel es mayor a 0 (va descendiendo) debe saltar
+    if lowerpipeX < 5 and vel > 0 and action:
+        reward += 10
+    print(state, action, reward)
     return reward
 
 
 # el estado actual del juego
 # altura del pajaro y las pipes, dividido por 10 para tener menos estados,
 # ya que no importa si la altura es unos px mas o menos
-def getState(playery, upperPipe, lowerPipeY, lowerPipeX):
-    state = (playery // 10, lowerPipeY // 10)
+def getState(ydiff, lowerPipeX, vel):
+    state = (ydiff // 10, int(lowerPipeX // 10), vel)
     return state
 
 
 def egreedy(state):
-    S = hash(state)
+    S = state
     if random.random() < e:
         A = random.choice([True, False])
     else:
@@ -84,17 +67,9 @@ def egreedy(state):
     return A
 
 
-def hash(state):
-    # Convertir el estado en str hasheable
-    state_str = str(state)
-    state_hash = hashlib.sha256(state_str.encode()).hexdigest()
-    return state_hash
-
-
 def sarsa(state, prevAction, nextAction, R, newState):
-    # hash para que se pueda ocupar en un diccionario
-    S = hash(state)
-    S2 = hash(newState)
+    S = state
+    S2 = newState
 
     # Q con estado actual y accion anterior
     currentQ = Q.get((S, prevAction), 0.0)
@@ -108,10 +83,15 @@ def sarsa(state, prevAction, nextAction, R, newState):
     # Actualizar el diccionario Q con el nuevo valor Q
     Q[(S, prevAction)] = newQ
 
+    Q_converted = {str(key): value for key, value in Q.items()}
+    with open("q_values.json", "w") as file:
+        json.dump(Q_converted, file, indent=4, ensure_ascii=False)
+
 
 def qLearning(state, prevAction, R, newState):
-    S = hash(state)
-    S2 = hash(newState)
+    S = state
+    S2 = newState
+
     currentQ = Q.get((S, prevAction), 0.0)
 
     maxQ = max([Q.get((S2, action), 0.0) for action in [True, False]])

@@ -239,7 +239,8 @@ def mainGame(movementInfo):
 	i=0
 	saltar=False
 	# Inicializar SARSA/Q-Learning con S
-	state = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
+	ydiff = lowerPipes[i]['y']-playery
+	state = getState(ydiff,lowerPipes[i]['x'],playerVelY)
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
 	if sarsaOqlearning:
 		prevAction = egreedy(state)
@@ -330,11 +331,9 @@ def mainGame(movementInfo):
 		if sarsaOqlearning:
         	# ejecutar A
 			saltar = prevAction
-			
+			ydiff = lowerPipes[i]['y']-playery
 			# observar R, S'
-			newState = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
-			print(lowerPipes[0]['y'])
-			print(lowerPipes[1]['y'])
+			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
 			R = getR(newState,prevAction)
 
 			# elegir A' de un S' (con epsilon-greedy)
@@ -354,9 +353,9 @@ def mainGame(movementInfo):
 
 			# ejecutar A
 			saltar = prevAction
-
+			ydiff = lowerPipes[i]['y']-playery
 			# observar R, S'
-			newState = getState(playery, upperPipes[i]['y'], lowerPipes[i]['y'],lowerPipes[i]['x'])
+			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
 			R = getR(newState, prevAction)
 
 			# aplicar formula Q
