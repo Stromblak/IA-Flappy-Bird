@@ -1,27 +1,26 @@
 from flappy_gen import *
-from red import NODOS, CAPAS
+from red import NODOS, CAPAS, BIAS
 import random
 import os
-import operator
 import statistics
-import  matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-POBLACION = 50
-HIJOS = int(POBLACION*0.1)
+POBLACION = 1000
+HIJOS  = int(POBLACION * 0.2)
+PADRES = int(POBLACION * 0.2)
 
-# 			  camino 	activacion
-MUTACION 	= [0.5, 	0.1]
-DELTA 		= [0.02, 	0.02]
+MUTACION = 0.2
+DELTA    = 0.02
+
 WMIN, WMAX = -1, 1
-WACTIVACION = 1
-
 RANDOM = True
 USARPESOS = False
-MINFITNESS = 3000
+MINFITNESS = 6000
 
 def prob(p):
 	if random.uniform(0, 1) < p: return True
 	else: return False
+
 
 class Pajaro:
 	def __init__(self):
@@ -37,11 +36,7 @@ class Pajaro:
 
 				if RANDOM:
 					for k in range(NODOS[i-1]):
-						self.pesos[i][-1][k] = random.uniform(-1, 1)
-
-		self.pesos.append(WACTIVACION)
-
-		self.pesos[-1] = 1
+						self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
 
 	def hijo(self, p1, p2):
 		for i in range(1, CAPAS):
@@ -49,53 +44,31 @@ class Pajaro:
 				for k in range(NODOS[i-1]):
 					self.pesos[i][j][k] = random.choice([p1.pesos[i][j][k], p2.pesos[i][j][k]])
 
-		self.pesos[-1] = random.choice([p1.pesos[-1], p2.pesos[-1]])
+		#self.pesos[-1] = random.choice([p1.pesos[-1], p2.pesos[-1]])
 
-		self.mutarPeso()
+		self.mutar()
 
-		self.fitness = p1.fitness + p2.fitness
-
-	def mutarPeso(self):
+	def mutar(self):
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				for k in range(NODOS[i-1]):
-					if prob(MUTACION[1]):
-						nuevo = self.pesos[i][j][k] + random.uniform(-1, 1) * DELTA[0]
-						self.pesos[i][j][k] = np.clip(nuevo, WMIN, WMAX)
-
-		return
+					if prob(MUTACION):
+						self.pesos[i][j][k] += random.uniform(-1, 1) * DELTA
 	
-	def mutarActivacion(self):
-		self.pesos[-1] += random.uniform(-1, 1) * DELTA[1]	
-
 	def guardar(self, archivo):
 		if self.fitness < MINFITNESS:
 			return
-
+		
 		f = open(archivo + "-" + str(self.fitness) + ".txt", 'w')
 
+		f.write( " ".join( [str(n) for n in BIAS]) + "\n")
 		f.write( " ".join( [str(n) for n in NODOS]) + "\n")
+
 		for i in range(1, CAPAS):
 			for j in range(NODOS[i]):
 				f.write( " ".join( [str(p) for p in self.pesos[i][j]]) + "\n")
 
-		f.write(str(self.pesos[-1]))
-
 		f.close()	
-
-	def cargar(self, archivo):
-		skip = 1
-		pesos = [ [] ]
-		for i in range(1, CAPAS):
-			pesos.append( np.loadtxt(archivo, dtype=float, skiprows=skip, max_rows=NODOS[i]) )
-
-			if pesos[-1].ndim == 1:
-				pesos[-1] = [np.loadtxt(archivo, dtype=float, skiprows=skip, max_rows=NODOS[i])]
-			skip += NODOS[i]
-
-		pesos.append(np.loadtxt(archivo, dtype=float, skiprows=skip, max_rows=1))
-		
-		self.pesos = pesos
 
 
 class AlgGenetico():
@@ -110,6 +83,8 @@ class AlgGenetico():
 		
 		self.fitnessMaxGen = []
 		self.fitnessPromedioGen = []
+
+		self.f = open("calidad.txt", "w")
 
 	def ciclo(self):
 		self.calculoFitness()
@@ -135,21 +110,18 @@ class AlgGenetico():
 		self.fitnessPromedioGen.append(statistics.mean(fitness))
 		print(self.fitnessPromedioGen[-1], self.fitnessMaxGen[-1])
 
+		self.f.write(str(self.fitnessPromedioGen[-1]) + " " + str(self.fitnessMaxGen[-1]) + "\n")
+
 	def descendencia(self):
-		self.pajaros[-1].hijo(self.pajaros[0], self.pajaros[0])
 		for i in range(HIJOS):
-			p1 = random.randint(0, HIJOS-1)
-			p2 = (p1 + random.randint(1, HIJOS-1))%HIJOS
-			self.pajaros[POBLACION-2 - i].hijo(self.pajaros[p1], self.pajaros[p2])
+			p1 = random.randint(0, 4) #random.randint(0, HIJOS-1)
+			p2 = (p1 + random.randint(1, PADRES-1)) % PADRES
+			self.pajaros[POBLACION-1 - i].hijo(self.pajaros[p1], self.pajaros[p2])
 
 	def mutacion(self):
 		for i in range(1, POBLACION):
-				if prob(MUTACION[0]):
-					self.pajaros[i].mutarPeso()
-
-				if prob(MUTACION[1]):			
-					self.pajaros[i].mutarActivacion()
-
+			if prob(MUTACION):
+				self.pajaros[i].mutar()
 
 	def grafico(self):
 		x = [i for i in range(len(self.fitnessMaxGen))]
@@ -163,6 +135,7 @@ class AlgGenetico():
 		plt.show()
 
 
+# ---------------------
 instancia = AlgGenetico()
 while True:
 	try:

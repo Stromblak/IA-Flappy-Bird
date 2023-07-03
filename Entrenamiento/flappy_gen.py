@@ -150,7 +150,6 @@ def main2():
 		playerIndex = next(playerIndexGen)
 	loopIter = (loopIter + 1) % 30
 	basex = -((-basex + 4) % baseShift)
-	playerShm(playerShmVals)
 
 	# draw sprites
 	SCREEN.blit(IMAGES['background'], (0,0))
@@ -164,12 +163,21 @@ def main2():
 
 
 # cosa principal
-distInicio = -200
-distancia = 20
+distInicio = -0
+distancia = 0
 tubFin = 300
+
+CONTADOR = 20
+CONTMAX = 40
+AUX = 1
+
 
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
+	FPSCLOCK.tick(FPS)
+
+	global CONTADOR
+	CONTADOR = 20
 
 	playerIndexGen = cycle([0, 1, 2, 1])
 	playerx = [ int(SCREENWIDTH * 0.2) for i in range(pajaros)]
@@ -194,7 +202,9 @@ def mainGame(pajaros, listaPajaros):
 		{'x': SCREENWIDTH + 200 + distInicio+ ((SCREENWIDTH + distancia) / 2 ), 'y': newPipe2[1]['y']},
 	]
 
-
+	dt =  FPSCLOCK.tick(FPS)/1000.0
+	pipeVelX = -128 * dt
+	
 	# player velocity, max velocity, downward acceleration, acceleration on flap
 	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
 	playerMaxVelY =  10   # max vel along Y, max descend speed
@@ -214,8 +224,6 @@ def mainGame(pajaros, listaPajaros):
 	tuberiaH = IMAGES['pipe'][0].get_height()
 	playerW = IMAGES['player'][0].get_width()
 	playerH = IMAGES['player'][0].get_height()
-	tuberia = {"tuberias": 1, "h": tuberiaH, "w": tuberiaW}
-	dt =  FPSCLOCK.tick(FPS)/1000.0
 
 	while True:
 		for event in pygame.event.get():
@@ -231,10 +239,10 @@ def mainGame(pajaros, listaPajaros):
 						if SONIDO:
 							SOUNDS['wing'].play()	
 
-		tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
 		muertos = set()
 		for i in restantes:
 			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
+			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
 
 			# ia
 			if red(tuberia, pajaro, listaPajaros[i]):
@@ -273,16 +281,15 @@ def mainGame(pajaros, listaPajaros):
 		if not len(restantes) or score == tubFin:
 			return fitness, distMuerte
 		
-		if len(restantes) == 1 and score == 5:
-			return fitness, distMuerte
-
+		# check for score
 		playerMidPos = int(SCREENWIDTH * 0.2) + IMAGES['player'][0].get_width() / 2
 		for pipe in upperPipes:
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-				score += 0
+				score += 1
 				if SONIDO:
 					SOUNDS['point'].play()
+
 
 		# playerIndex basex change
 		if (loopIter + 1) % 3 == 0:
@@ -291,8 +298,6 @@ def mainGame(pajaros, listaPajaros):
 		basex = -((-basex + 100) % baseShift)
 
 
-		dt = FPSCLOCK.tick(FPS)/1000.0
-		pipeVelX = -128 * dt * (FPSCLOCK.get_fps() / FPS)
 		# move pipes to left
 		for uPipe, lPipe in zip(upperPipes, lowerPipes):
 			uPipe['x'] += pipeVelX
@@ -327,7 +332,6 @@ def mainGame(pajaros, listaPajaros):
 		if len(upperPipes) > 0 and upperPipes[0]['x'] < -IMAGES['pipe'][0].get_width():
 			upperPipes.pop(0)
 			lowerPipes.pop(0)
-			score += 1
 
 		# draw sprites
 		SCREEN.blit(IMAGES['background'], (0,0))
@@ -352,60 +356,38 @@ def mainGame(pajaros, listaPajaros):
 			SCREEN.blit(playerSurface, (playerx[i], playery[i]))
 
 		pygame.display.update()
-
-
-def showScore(score):
-	"""displays score in center of screen"""
-	scoreDigits = [int(x) for x in list(str(score))]
-	totalWidth = 0 # total width of all numbers to be printed
-
-	for digit in scoreDigits:
-		totalWidth += IMAGES['numbers'][digit].get_width()
-
-	Xoffset = (SCREENWIDTH - totalWidth) / 2
-
-	for digit in scoreDigits:
-		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
-		Xoffset += IMAGES['numbers'][digit].get_width()
-
-def showPoblacion(score):
-	"""displays score in center of screen"""
-	scoreDigits = [int(x) for x in list(str(score))]
-	totalWidth = 0 # total width of all numbers to be printed
-
-	for digit in scoreDigits:
-		totalWidth += IMAGES['numbers'][digit].get_width()
-
-	Xoffset = (SCREENWIDTH - totalWidth) / 2
-
-	for digit in scoreDigits:
-		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.02))
-		Xoffset += IMAGES['numbers'][digit].get_width()
-
-			
-
-def playerShm(playerShm):
-	"""oscillates the value of playerShm['val'] between 8 and -8"""
-	if abs(playerShm['val']) == 8:
-		playerShm['dir'] *= -1
-
-	if playerShm['dir'] == 1:
-		playerShm['val'] += 1
-	else:
-		playerShm['val'] -= 1
+		FPSCLOCK.tick(FPS)
 
 def getRandomPipe():
 	"""returns a randomly generated pipe"""
 	# y of gap between upper and lower pipe
+	global AUX, CONTMAX, CONTADOR
+
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
+
+	CONTADOR = (CONTADOR + 1)%CONTMAX
+	if CONTADOR > CONTMAX/2:
+		AUX = (AUX + 1)%2
+
+		if AUX:
+			gapY = 0
+				
+		else:
+			gapY = int(BASEY * 0.6 - PIPEGAPSIZE)
+
+
+	# gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()
 	pipeX = SCREENWIDTH + 10 + distancia
+
 
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
 	]
+
+
 
 def checkCrash(player, upperPipes, lowerPipes):
 	"""returns True if player collides with base or pipes."""
@@ -477,3 +459,33 @@ def getHitmask(image):
 		for y in xrange(image.get_height()):
 			mask[x].append(bool(image.get_at((x,y))[3]))
 	return mask
+
+
+
+def showScore(score):
+	"""displays score in center of screen"""
+	scoreDigits = [int(x) for x in list(str(score))]
+	totalWidth = 0 # total width of all numbers to be printed
+
+	for digit in scoreDigits:
+		totalWidth += IMAGES['numbers'][digit].get_width()
+
+	Xoffset = (SCREENWIDTH - totalWidth) / 2
+
+	for digit in scoreDigits:
+		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
+		Xoffset += IMAGES['numbers'][digit].get_width()
+
+def showPoblacion(score):
+	"""displays score in center of screen"""
+	scoreDigits = [int(x) for x in list(str(score))]
+	totalWidth = 0 # total width of all numbers to be printed
+
+	for digit in scoreDigits:
+		totalWidth += IMAGES['numbers'][digit].get_width()
+
+	Xoffset = (SCREENWIDTH - totalWidth) / 2
+
+	for digit in scoreDigits:
+		SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.02))
+		Xoffset += IMAGES['numbers'][digit].get_width()
