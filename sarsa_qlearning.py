@@ -5,7 +5,7 @@ import json
 Q = {}  # Diccionario para almacenar Q's, guarda un par estado y accion (Q es el valor)
 a = 0.95  # alfa: Tasa de aprendizaje
 g = 0.05  # gamma: Factor de descuento
-e = 0.01  # epsilon: para e-greedy
+e = 0.1  # epsilon: para e-greedy
 
 try:
     with open("q_values.json", "r") as file:
@@ -16,35 +16,32 @@ except FileNotFoundError:
 
 
 def getR(state, action):
-    reward = 0
+    reward = 0.5
     ydiff = state[0]
     lowerpipeX = state[1]
     vel = state[2]
 
-    # si esta un poco por encima del pipe inferior (altura +o- perfecta)
-    if ydiff == 4 and action:
-        reward -= 1
-    elif ydiff == 4 and not action:
-        reward += 1
-    # si esta bajo la pipe inferior (debe saltar)
-    elif ydiff > 0 and action:
-        reward += 1
-    elif ydiff > 0 and not action:
-        reward -= 1
-    # si esta sobre la pipe inferior y el gap (no debe saltar)
-    elif ydiff < -4 and action:
-        reward -= 1
-    elif ydiff < -4 and not action:
-        reward += 1
-    # si esta casi tocando el cielo
-    if ydiff > 4 and action:
-        reward -= 100
-    if ydiff > 4 and not action:
-        reward += 2
-    # si es menor a 5 (cerca de la tuberia) y vel es mayor a 0 (va descendiendo) debe saltar
-    if lowerpipeX < 5 and vel > 0 and action:
-        reward += 10
-    print(state, action, reward)
+    # # si esta un poco por encima del pipe inferior (altura +o- perfecta)
+    # if ydiff == 4 and action:
+    #     reward -= 1
+    # elif ydiff == 4 and not action:
+    #     reward += 1
+    # # si esta bajo la pipe inferior (debe saltar)
+    # elif ydiff > 0 and action:
+    #     reward += 1
+    # elif ydiff > 0 and not action:
+    #     reward -= 1
+    # # si esta sobre la pipe inferior y el gap (no debe saltar)
+    # elif ydiff < -4 and action:
+    #     reward -= 1
+    # elif ydiff < -4 and not action:
+    #     reward += 1
+    # # si esta casi tocando el cielo
+    # if ydiff > 4 and action:
+    #     reward -= 100
+    # if ydiff > 4 and not action:
+    #     reward += 2
+    #print(state, action, reward)
     return reward
 
 
@@ -62,7 +59,7 @@ def egreedy(state):
         A = random.choice([True, False])
     else:
         # Explotacion: seleccionar la accion con el valor Q maximo
-        A = max([True, False], key=lambda action: Q.get((S, action), 0.0))
+        A = max([True, False], key=lambda action: Q.get((S, action), 0.0)) #if len(Q) > 1 else -Q.get((S, action), 0.0))
 
     return A
 
@@ -83,10 +80,13 @@ def sarsa(state, prevAction, nextAction, R, newState):
     # Actualizar el diccionario Q con el nuevo valor Q
     Q[(S, prevAction)] = newQ
 
+    # Q_converted = {str(key): value for key, value in Q.items()}
+    # with open("q_values.json", "w") as file:
+    #     json.dump(Q_converted, file, indent=4, ensure_ascii=False)
+def saveqvalues():
     Q_converted = {str(key): value for key, value in Q.items()}
     with open("q_values.json", "w") as file:
         json.dump(Q_converted, file, indent=4, ensure_ascii=False)
-
 
 def qLearning(state, prevAction, R, newState):
     S = state
