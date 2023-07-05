@@ -157,6 +157,25 @@ def showWelcomeAnimation():
 	playerShmVals = {'val': 0, 'dir': 1}
 
 	while True:
+		
+
+		#mover debajo del for si no se quiere reinicio automatico
+		# adjust playery, playerIndex, basex
+		if (loopIter + 1) % 5 == 0:
+			playerIndex = next(playerIndexGen)
+		loopIter = (loopIter + 1) % 30
+		basex = -((-basex + 4) % baseShift)
+		playerShm(playerShmVals)
+
+		# draw sprites
+		SCREEN.blit(IMAGES['background'], (0,0))
+		SCREEN.blit(IMAGES['player'][playerIndex],
+					(playerx, playery + playerShmVals['val']))
+		SCREEN.blit(IMAGES['message'], (messagex, messagey))
+		SCREEN.blit(IMAGES['base'], (basex, BASEY))
+
+		pygame.display.update()
+		FPSCLOCK.tick(FPS)
 		#reinicio automatico
 		return {
 			'playery': playery + playerShmVals['val'],
@@ -176,22 +195,7 @@ def showWelcomeAnimation():
 					'playerIndexGen': playerIndexGen,
 				}
 
-		# adjust playery, playerIndex, basex
-		if (loopIter + 1) % 5 == 0:
-			playerIndex = next(playerIndexGen)
-		loopIter = (loopIter + 1) % 30
-		basex = -((-basex + 4) % baseShift)
-		playerShm(playerShmVals)
-
-		# draw sprites
-		SCREEN.blit(IMAGES['background'], (0,0))
-		SCREEN.blit(IMAGES['player'][playerIndex],
-					(playerx, playery + playerShmVals['val']))
-		SCREEN.blit(IMAGES['message'], (messagex, messagey))
-		SCREEN.blit(IMAGES['base'], (basex, BASEY))
-
-		pygame.display.update()
-		FPSCLOCK.tick(FPS)
+		
 
 # cosa principal
 def mainGame(movementInfo):
@@ -235,9 +239,10 @@ def mainGame(movementInfo):
 
 	ciclo = 0
 	
-	sarsaOqlearning = 1
+	sarsaOqlearning = 0
 	i=0
 	saltar=False
+	R=0
 	# Inicializar SARSA/Q-Learning con S
 	ydiff = lowerPipes[i]['y']-playery
 	state = getState(ydiff,lowerPipes[i]['x'],playerVelY)
@@ -246,6 +251,7 @@ def mainGame(movementInfo):
 		prevAction = egreedy(state)
 
 	while True:
+		# manual
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
@@ -255,23 +261,6 @@ def mainGame(movementInfo):
 					playerVelY = playerFlapAcc
 					playerFlapped = True
 					saltar = True
-		
-
-		# ---------------------------- IA ------------------------------
-		# if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY):
-		# 	if playery > -2 * IMAGES['player'][0].get_height():
-		# 		playerVelY = playerFlapAcc
-		# 		playerFlapped = True
-		# 		SOUNDS['wing'].play()
-		
-		
-			
-		# check for crash here
-		
-		# check for score
-			
-		
-
 		# SARSA
 		if sarsaOqlearning:
         	# ejecutar A
@@ -308,20 +297,154 @@ def mainGame(movementInfo):
 				uPipe['x'] += pipeVelX
 				lPipe['x'] += pipeVelX
 
+			
+			if lowerPipes[i]['x'] < 10:	
+				if i==0:
+					i=1
+				else:
+					i=0 
+			ydiff = lowerPipes[i]['y']-playery
+			# observar R, S'
+			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
+			R += 0.5
+			#print(state)
+			#print(newState)
+			
+			#crash
+			crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
+							upperPipes, lowerPipes)
+			if crashTest[0]:
+				R = -1000
+				print(state,newState, prevAction)
+				sarsa(state, prevAction, nextAction, R, newState)
+				saveqvalues()
+				R = 0
+				return {
+					'y': playery,
+					'groundCrash': crashTest[1],
+					'basex': basex,
+					'upperPipes': upperPipes,
+					'lowerPipes': lowerPipes,
+					'score': score,
+					'playerVelY': playerVelY,
+					'playerRot': playerRot
+				}
+
+			#score
+			playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
+			for pipe in upperPipes:
+				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
+				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+					score += 1
+					R=5
+					
+					#print(lowerPipes[i]['x'])
+					saveqvalues()
+					#SOUNDS['point'].play()
+
+			# elegir A de un S (con epsilon-greedy)
+			flag = 0
+			if ydiff > 35 and lowerPipes[i]['x'] > 250:
+				nextAction = False
+				flag = 1
+			if ydiff < 0 and lowerPipes[i]['x'] > 250:
+				nextAction = True
+				flag = 1
+			if lowerPipes[i]['x'] > 250:
+				flag = 1
+			
+			if ydiff > 100 and flag==0:
+				nextAction = False
+			else:
+				nextAction = egreedy(newState)
+
+			# aplicar formula Q
+			if flag==0:
+				sarsa(state, prevAction, nextAction, R, newState)
+
+			# actualizar
+			state = newState
+			prevAction = nextAction
+
+		# Q-Learning
+		else:
+			flag = 0
+
+			if lowerPipes[i]['x'] > 250:
+				if ydiff > 35: prevAction = False
+				elif ydiff < 0: prevAction = True
+				else: prevAction= random.choice([True, False])
+				flag =1
+			
+			# elegir A de un S (con epsilon-greedy)
+			if flag==0:
+				if ydiff > 35: prevAction = False
+				elif lowerPipes[i]['x'] < 110 and ydiff < 35: prevAction = True
+				else: prevAction = egreedy(state)
+				#print(lowerPipes[i]['x'], ydiff, prevAction)
+				print(ydiff, lowerPipes[i]['x'], lowerPipes[0]['x'], lowerPipes[1]['x'])
+			
+        	# ejecutar A
+			saltar = prevAction
+
+			# Movimiento IA
+			if saltar:
+				if playery > -2 * IMAGES['player'][0].get_height():
+					playerVelY = playerFlapAcc
+					playerFlapped = True
+
+			# playerIndex basex change
+			if (loopIter + 1) % 3 == 0:
+				playerIndex = next(playerIndexGen)
+			loopIter = (loopIter + 1) % 30
+			basex = -((-basex + 100) % baseShift)
+
+			# rotate the player
+			if playerRot > -90:
+				playerRot -= playerVelRot
+			# player's movement
+			if playerVelY < playerMaxVelY and not playerFlapped:
+				playerVelY += playerAccY
+			if playerFlapped:
+				playerFlapped = False
+				saltar = False
+				playerRot = 45
+
+			playerHeight = IMAGES['player'][playerIndex].get_height()
+			playery += min(playerVelY, BASEY - playery - playerHeight)
+
+			# move pipes to left
+			for uPipe, lPipe in zip(upperPipes, lowerPipes):
+				uPipe['x'] += pipeVelX
+				lPipe['x'] += pipeVelX
+
+			# cambiar de pipes
+
+			# si ambas distancias son positivas, elegir el menor
+			min_positive_index = None
+			min_positive_value = 10000  
+
+			for i in range(len(lowerPipes)):
+				if lowerPipes[i]['x'] > 0 and lowerPipes[i]['x'] < min_positive_value:
+					min_positive_value = lowerPipes[i]['x']
+					min_positive_index = i
+
+			if min_positive_index is not None:
+				i = min_positive_index
 
 			ydiff = lowerPipes[i]['y']-playery
 			# observar R, S'
 			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
-			R = getR(newState,prevAction)
-			print(state)
-			print(newState)
+			R += 0.5
 			
 			#crash
 			crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
 			if crashTest[0]:
 				R=-1000
-				sarsa(state, prevAction, nextAction, R, newState)
+				#print(state,newState, prevAction)
+				qLearning(state, prevAction, R, newState)
+				R=0
 				saveqvalues()
 				return {
 					'y': playery,
@@ -341,48 +464,7 @@ def mainGame(movementInfo):
 				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 					score += 1
 					R=5
-					if i==0:
-						i=1
-					else:
-						i=0 
 					saveqvalues()
-					SOUNDS['point'].play()
-
-			# elegir A' de un S' (con epsilon-greedy)
-			flag =0
-			if ydiff > 35 and lowerPipes[i]['x'] > 250:
-				nextAction = False
-				flag =1
-			if ydiff < 0 and lowerPipes[i]['x'] > 250:
-				nextAction = True
-				flag =1
-			if lowerPipes[i]['x'] > 250:
-				flag =1
-
-			if ydiff > 35:
-				nextAction = False
-			else:
-				nextAction = egreedy(newState)
-
-			# aplicar formula Q
-			if flag==0:
-				sarsa(state, prevAction, nextAction, R, newState)
-
-			# actualizar
-			state = newState
-			prevAction = nextAction
-
-		# Q-Learning
-		else:
-			# elegir A de un S (con epsilon-greedy)
-			prevAction = egreedy(state)
-
-			# ejecutar A
-			saltar = prevAction
-			ydiff = lowerPipes[i]['y']-playery
-			# observar R, S'
-			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
-			R = getR(newState, prevAction)
 
 			# aplicar formula Q
 			qLearning(state, prevAction, R, newState)
