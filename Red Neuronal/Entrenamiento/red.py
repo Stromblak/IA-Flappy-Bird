@@ -1,11 +1,11 @@
 import numpy as np
 
-BIAS = [1, 1, 0]
-NODOS = [4 + BIAS[0], 4 + BIAS[1], 1]
+BIAS  = [1, 1, 0]
+NODOS = [3 + BIAS[0], 4 + BIAS[1], 1]
 CAPAS = len(NODOS)
 
-def sigmoid(w):
-	return 1.0/(1 + np.exp(-w))
+def sig(x):
+	return 1.0/(1 + np.exp(-x))
 
 def procesarEntrada(tuberias, player):
 	entrada = [player["velY"] / 10.0]
@@ -15,19 +15,19 @@ def procesarEntrada(tuberias, player):
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		diff_Arriba = (uPipe["y"] + tuberias["h"]           - player["y"]              ) / 260.0
-		diff_Abajo  = (lPipe["y"]                           - player["y"] + player["h"]) / 262.48
-		diff_Final  = (min(149, uPipe["x"]) + tuberias["w"] - player["x"]              ) / 149.0
+		delta_Arriba = (uPipe["y"] + tuberias["h"]           - player["y"]              ) / (404.48 - 80.0)
+		delta_Abajo  = (lPipe["y"]                           - player["y"] + player["h"]) / (322.0 - player["h"])
+		delta_Final  = (min(148, uPipe["x"]) + tuberias["w"] - player["x"]              ) / (148.0)
 
-		entrada.append( diff_Abajo )
+		entrada.append( delta_Abajo )
 
 		if not siguiente:
-			entrada.append(diff_Final)
+			entrada.append( delta_Final )
 			siguiente = 1
+			break
 			continue
 
 		break
-
 
 	if BIAS[0]:
 		entrada.insert(0, 1)
@@ -47,7 +47,7 @@ def red(tuberias, player, paj):
 	for i in range(1, CAPAS):
 		for j in range(BIAS[i], NODOS[i]):
 			if i != CAPAS-1:
-				capas[i][j] = sigmoid( np.dot(paj.pesos[i][j], capas[i-1]) )
+				capas[i][j] = sig( np.dot(paj.pesos[i][j], capas[i-1]) )
 			else:
 				capas[i][j] = (np.dot(paj.pesos[i][j], capas[i-1]) >= 1)
 

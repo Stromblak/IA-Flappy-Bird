@@ -183,7 +183,7 @@ def showWelcomeAnimation():
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-distancia = 0
+
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']
@@ -192,21 +192,14 @@ def mainGame(movementInfo):
 	basex = movementInfo['basex']
 	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
 
-	# get 2 new pipes to add to upperPipes lowerPipes list
-	newPipe1 = getRandomPipe()
-	newPipe2 = getRandomPipe()
 
-	# list of upper pipes
-	upperPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
-		{'x': SCREENWIDTH + 200 + ((SCREENWIDTH + distancia)/ 2), 'y': newPipe2[0]['y']},
-	]
+	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
+	upperPipes = [{'x': SCREENWIDTH + 200, 'y': gapY - IMAGES['pipe'][0].get_height()}]
+	lowerPipes = [{'x': SCREENWIDTH + 200, 'y': gapY + PIPEGAPSIZE}]
 
-	# list of lowerpipe
-	lowerPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
-		{'x': SCREENWIDTH + 200 + ((SCREENWIDTH + distancia) / 2), 'y': newPipe2[1]['y']},
-	]
+	newPipe = getRandomPipe(lowerPipes)
+	upperPipes.append(newPipe[0])
+	lowerPipes.append(newPipe[1])
 
 	dt = FPSCLOCK.tick(FPS)/1000
 	pipeVelX = -128 * dt
@@ -300,7 +293,7 @@ def mainGame(movementInfo):
 
 		# add new pipe when first pipe is about to touch left of screen
 		if 3 > len(upperPipes) > 0 and 0 < upperPipes[0]['x'] < 5:
-			newPipe = getRandomPipe()
+			newPipe = getRandomPipe(lowerPipes)
 			upperPipes.append(newPipe[0])
 			lowerPipes.append(newPipe[1])
 
@@ -406,13 +399,10 @@ def playerShm(playerShm):
 		playerShm['val'] -= 1
 
 
-def getRandomPipe():
-	"""returns a randomly generated pipe"""
-	# y of gap between upper and lower pipe
-	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
-	gapY += int(BASEY * 0.2)
+def getRandomPipe(lowerPipes):
+	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()
-	pipeX = SCREENWIDTH + 10 + distancia
+	pipeX = lowerPipes[-1]["x"] + SCREENWIDTH/2 + 4
 
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
