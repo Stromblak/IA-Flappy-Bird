@@ -3,7 +3,6 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from ia import *
 from sarsa_qlearning import *
 
 sys.setrecursionlimit(10000)
@@ -157,6 +156,25 @@ def showWelcomeAnimation():
 	playerShmVals = {'val': 0, 'dir': 1}
 
 	while True:
+		
+
+		#mover debajo del for si no se quiere reinicio automatico
+		# adjust playery, playerIndex, basex
+		if (loopIter + 1) % 5 == 0:
+			playerIndex = next(playerIndexGen)
+		loopIter = (loopIter + 1) % 30
+		basex = -((-basex + 4) % baseShift)
+		playerShm(playerShmVals)
+
+		# draw sprites
+		SCREEN.blit(IMAGES['background'], (0,0))
+		SCREEN.blit(IMAGES['player'][playerIndex],
+					(playerx, playery + playerShmVals['val']))
+		SCREEN.blit(IMAGES['message'], (messagex, messagey))
+		SCREEN.blit(IMAGES['base'], (basex, BASEY))
+
+		pygame.display.update()
+		FPSCLOCK.tick(FPS)
 		#reinicio automatico
 		return {
 			'playery': playery + playerShmVals['val'],
@@ -176,22 +194,20 @@ def showWelcomeAnimation():
 					'playerIndexGen': playerIndexGen,
 				}
 
-		# adjust playery, playerIndex, basex
-		if (loopIter + 1) % 5 == 0:
-			playerIndex = next(playerIndexGen)
-		loopIter = (loopIter + 1) % 30
-		basex = -((-basex + 4) % baseShift)
-		playerShm(playerShmVals)
+def load_episode():
+    try:
+        with open('data.txt', 'r') as file:
+            lines = file.readlines()
+            if lines:
+                last_line = lines[-1].strip()
+                episode = int(last_line.split()[0])
+                return episode
+    except FileNotFoundError:
+        with open('data.txt', 'w') as file:
+            pass
+    return 0
 
-		# draw sprites
-		SCREEN.blit(IMAGES['background'], (0,0))
-		SCREEN.blit(IMAGES['player'][playerIndex],
-					(playerx, playery + playerShmVals['val']))
-		SCREEN.blit(IMAGES['message'], (messagex, messagey))
-		SCREEN.blit(IMAGES['base'], (basex, BASEY))
-
-		pygame.display.update()
-		FPSCLOCK.tick(FPS)
+episode = 0#load_episode()
 
 # cosa principal
 def mainGame(movementInfo):
@@ -235,17 +251,21 @@ def mainGame(movementInfo):
 
 	ciclo = 0
 	
-	sarsaOqlearning = 1
-	i=0
-	saltar=False
+	algoritmo = 0 # 0 Qlearning, 1 SARSA
+	i = 0 # indice de la tuberia
+	saltar = False # accion a tomar
+	r = 0 # reward
+
 	# Inicializar SARSA/Q-Learning con S
-	ydiff = lowerPipes[i]['y']-playery
+	ydiff = lowerPipes[i]['y'] - playery # altura del tubo inferior - agente
 	state = getState(ydiff,lowerPipes[i]['x'],playerVelY)
+
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
-	if sarsaOqlearning:
+	if algoritmo:
 		prevAction = egreedy(state)
 
 	while True:
+		# manual (ignorar)
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
@@ -255,140 +275,134 @@ def mainGame(movementInfo):
 					playerVelY = playerFlapAcc
 					playerFlapped = True
 					saltar = True
-		
 
-		# ---------------------------- IA ------------------------------
-		# if ia(playerFlapped, zip(upperPipes, lowerPipes), playerx, playery,	playerVelY):
-		# 	if playery > -2 * IMAGES['player'][0].get_height():
-		# 		playerVelY = playerFlapAcc
-		# 		playerFlapped = True
-		# 		SOUNDS['wing'].play()
-		
-		
-			
-		# check for crash here
-		
-		# check for score
-			
-		
+		# QLearning: elegir A de un S (con epsilon-greedy)
+		if algoritmo == 0:
+			flag = 0
 
-		# SARSA
-		if sarsaOqlearning:
-        	# ejecutar A
-			saltar = prevAction  
-			# Movimiento IA
-			if (saltar):
-				if playery > -2 * IMAGES['player'][0].get_height():
-					playerVelY = playerFlapAcc
-					playerFlapped = True
-			# playerIndex basex change
-			if (loopIter + 1) % 3 == 0:
-				playerIndex = next(playerIndexGen)
-			loopIter = (loopIter + 1) % 30
-			basex = -((-basex + 100) % baseShift)
-
-			# rotate the player
-			if playerRot > -90:
-				playerRot -= playerVelRot
-			# player's movement
-			if playerVelY < playerMaxVelY and not playerFlapped:
-				playerVelY += playerAccY
-			if playerFlapped:
-				playerFlapped = False
-				saltar = False
-
-				# more rotation to cover the threshold (calculated in visible rotation)
-				playerRot = 45
-
-			playerHeight = IMAGES['player'][playerIndex].get_height()
-			playery += min(playerVelY, BASEY - playery - playerHeight)
-
-			# move pipes to left
-			for uPipe, lPipe in zip(upperPipes, lowerPipes):
-				uPipe['x'] += pipeVelX
-				lPipe['x'] += pipeVelX
-
-
-			ydiff = lowerPipes[i]['y']-playery
-			# observar R, S'
-			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
-			R = getR(newState,prevAction)
-			print(state)
-			print(newState)
-			
-			#crash
-			crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
-							upperPipes, lowerPipes)
-			if crashTest[0]:
-				R=-1000
-				sarsa(state, prevAction, nextAction, R, newState)
-				saveqvalues()
-				return {
-					'y': playery,
-					'groundCrash': crashTest[1],
-					'basex': basex,
-					'upperPipes': upperPipes,
-					'lowerPipes': lowerPipes,
-					'score': score,
-					'playerVelY': playerVelY,
-					'playerRot': playerRot
-				}
-
-			#score
-			playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
-			for pipe in upperPipes:
-				pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-				if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-					score += 1
-					R=5
-					if i==0:
-						i=1
-					else:
-						i=0 
-					saveqvalues()
-					SOUNDS['point'].play()
-
-			# elegir A' de un S' (con epsilon-greedy)
-			flag =0
-			if ydiff > 35 and lowerPipes[i]['x'] > 250:
-				nextAction = False
-				flag =1
-			if ydiff < 0 and lowerPipes[i]['x'] > 250:
-				nextAction = True
-				flag =1
 			if lowerPipes[i]['x'] > 250:
-				flag =1
+				if ydiff > 40: prevAction = False
+				elif ydiff < 0: prevAction = True
+				else: prevAction= random.choice([True, False])
+				flag = 1
 
-			if ydiff > 35:
-				nextAction = False
-			else:
-				nextAction = egreedy(newState)
-
-			# aplicar formula Q
-			if flag==0:
-				sarsa(state, prevAction, nextAction, R, newState)
-
-			# actualizar
-			state = newState
-			prevAction = nextAction
-
-		# Q-Learning
-		else:
 			# elegir A de un S (con epsilon-greedy)
-			prevAction = egreedy(state)
+			if flag==0:
+				if ydiff > 100: prevAction = False
+				#elif lowerPipes[i]['x'] < 100 and ydiff < 2: prevAction = True
+				#elif lowerPipes[i]['x'] < 105 and ydiff < 0: prevAction = True
+				#elif lowerPipes[i]['x'] < 50 and ydiff > 40: prevAction = False 
+				else: prevAction = egreedy(state)
 
-			# ejecutar A
-			saltar = prevAction
-			ydiff = lowerPipes[i]['y']-playery
-			# observar R, S'
-			newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
-			R = getR(newState, prevAction)
+        # ejecutar A
+		saltar = prevAction  
+		
+		# Movimiento IA
+		if saltar:
+			if playery > -2 * IMAGES['player'][0].get_height():
+				playerVelY = playerFlapAcc
+				playerFlapped = True
 
-			# aplicar formula Q
-			qLearning(state, prevAction, R, newState)
+		# playerIndex basex change
+		if (loopIter + 1) % 3 == 0:
+			playerIndex = next(playerIndexGen)
+		loopIter = (loopIter + 1) % 30
+		basex = -((-basex + 100) % baseShift)
 
-			# actualizar
-			state = newState
+		# rotate the player
+		if playerRot > -90:
+			playerRot -= playerVelRot
+		# player's movement
+		if playerVelY < playerMaxVelY and not playerFlapped:
+			playerVelY += playerAccY
+		if playerFlapped:
+			playerFlapped = False
+			saltar = False
+			playerRot = 45
+
+		playerHeight = IMAGES['player'][playerIndex].get_height()
+		playery += min(playerVelY, BASEY - playery - playerHeight)
+
+		# move pipes to left
+		for uPipe, lPipe in zip(upperPipes, lowerPipes):
+			uPipe['x'] += pipeVelX
+			lPipe['x'] += pipeVelX
+
+		# cambiar indice de pipes
+		mini = None
+		minval = 10000  
+
+		for i in range(len(lowerPipes)):
+			if lowerPipes[i]['x'] > 10 and lowerPipes[i]['x'] < minval:
+				minval = lowerPipes[i]['x']
+				mini = i
+			if mini is not None:
+				i = mini
+
+		ydiff = lowerPipes[i]['y']-playery
+		# observar R, S'
+		newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
+		r = 0
+			
+		#crash
+		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
+							upperPipes, lowerPipes)
+		if crashTest[0]:
+			r = -1000
+			if algoritmo: sarsa(state, prevAction, nextAction, r, newState)
+			else: qLearning(state, prevAction, r, newState)
+			saveqvalues()
+			r = 0
+			global episode
+			episode+=1
+			#save_epi_scr(episode, score)
+			print(episode, score)
+			return {
+				'y': playery,
+				'groundCrash': crashTest[1],
+				'basex': basex,
+				'upperPipes': upperPipes,
+				'lowerPipes': lowerPipes,
+				'score': score,
+				'playerVelY': playerVelY,
+				'playerRot': playerRot
+			}
+
+		#score
+		playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
+		for pipe in upperPipes:
+			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
+			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+				score += 1
+				#r = 5
+				#SOUNDS['point'].play()
+		
+		if algoritmo:
+			# elegir A de un S (con epsilon-greedy)
+			flag = 0
+
+			if lowerPipes[i]['x'] > 250:
+				if ydiff > 40: nextAction = False
+				elif ydiff < 0: nextAction = True
+				else: nextAction= random.choice([True, False])
+				flag = 1
+
+			# elegir A de un S (con epsilon-greedy)
+			if flag == 0:
+				if ydiff > 40: nextAction = False
+				elif lowerPipes[i]['x'] < 100 and ydiff < 40: nextAction = True
+				else: nextAction = egreedy(newState)
+
+				# aplicar formula Q
+				sarsa(state, prevAction, nextAction, r, newState)
+		else:
+			if flag == 0:
+				qLearning(state, prevAction, r, newState)
+
+		# actualizar
+		state = newState
+		if algoritmo:
+			prevAction = nextAction
 
 
 		# movimiento tuberias	----------------------------------------------------------
