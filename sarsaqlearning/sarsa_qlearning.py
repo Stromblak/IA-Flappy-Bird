@@ -1,15 +1,14 @@
 import random
 from flappy import *
 import json
-import math
 
 Q = {}  # Diccionario para almacenar Q's, guarda un par estado y accion (Q es el valor)
-a = 0.7  # alfa: Tasa de aprendizaje
-g = 0.95  # gamma: Factor de descuento
-e = 0  # epsilon: para e-greedy
+a = 0.7  # alfa: Tasa de aprendizaje #0.7 0.8 0.9
+g = 0.95  # gamma: Factor de descuento #0.95 1
+e = 0  # epsilon: para e-greedy #0 0.1
 
 try:
-    with open("qqq.json", "r") as file:
+    with open("./sarsaqlearning/qqq.json", "r") as file:
         Q_loaded = json.load(file)
     Q = {eval(key): value for key, value in Q_loaded.items()}
 except FileNotFoundError:
@@ -18,12 +17,8 @@ except FileNotFoundError:
 
 def saveqvalues():
     Q_converted = {str(key): value for key, value in Q.items()}
-    with open("qqq.json", "w") as file:
+    with open("./sarsaqlearning/qqq.json", "w") as file:
         json.dump(Q_converted, file, indent=4, ensure_ascii=False)
-
-
-def discretize(num):
-    return 10 * math.floor(num / 10)
 
 
 # el estado actual del juego
@@ -49,7 +44,6 @@ def egreedy(state):
             q_value = Q[(state, only_action)]
             if q_value < 0:
                 A = not only_action
-                # print(state, q_value, only_action, A)
             else:
                 A = only_action
         else:
@@ -82,3 +76,8 @@ def qLearning(state, prevAction, R, newState):
     newQ = currentQ + a * (R + g * maxQ - currentQ)
 
     Q[(state, prevAction)] = newQ
+
+
+def save_epi_scr(episode, score):
+    with open("datas.txt", "a") as file:
+        file.write(f"{episode} {score}\n")

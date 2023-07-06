@@ -3,7 +3,6 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from ia import *
 from sarsa_qlearning import *
 
 sys.setrecursionlimit(10000)
@@ -195,7 +194,20 @@ def showWelcomeAnimation():
 					'playerIndexGen': playerIndexGen,
 				}
 
-		
+def load_episode():
+    try:
+        with open('data.txt', 'r') as file:
+            lines = file.readlines()
+            if lines:
+                last_line = lines[-1].strip()
+                episode = int(last_line.split()[0])
+                return episode
+    except FileNotFoundError:
+        with open('data.txt', 'w') as file:
+            pass
+    return 0
+
+episode = 0#load_episode()
 
 # cosa principal
 def mainGame(movementInfo):
@@ -276,10 +288,10 @@ def mainGame(movementInfo):
 
 			# elegir A de un S (con epsilon-greedy)
 			if flag==0:
-				if ydiff > 40: prevAction = False
-				elif lowerPipes[i]['x'] < 100 and ydiff < 40: prevAction = True
-				elif lowerPipes[i]['x'] < 105 and ydiff < 0: prevAction = True
-				elif lowerPipes[i]['x'] < 50 and ydiff > 40: prevAction = False 
+				if ydiff > 100: prevAction = False
+				#elif lowerPipes[i]['x'] < 100 and ydiff < 2: prevAction = True
+				#elif lowerPipes[i]['x'] < 105 and ydiff < 0: prevAction = True
+				#elif lowerPipes[i]['x'] < 50 and ydiff > 40: prevAction = False 
 				else: prevAction = egreedy(state)
 
         # ejecutar A
@@ -341,7 +353,10 @@ def mainGame(movementInfo):
 			else: qLearning(state, prevAction, r, newState)
 			saveqvalues()
 			r = 0
-			print(score)
+			global episode
+			episode+=1
+			#save_epi_scr(episode, score)
+			print(episode, score)
 			return {
 				'y': playery,
 				'groundCrash': crashTest[1],
@@ -374,15 +389,15 @@ def mainGame(movementInfo):
 
 			# elegir A de un S (con epsilon-greedy)
 			if flag == 0:
-				if ydiff > 100: nextAction = False
-				elif lowerPipes[i]['x'] < 100 and ydiff < 0: nextAction = True
+				if ydiff > 40: nextAction = False
+				elif lowerPipes[i]['x'] < 100 and ydiff < 40: nextAction = True
 				else: nextAction = egreedy(newState)
 
-			# aplicar formula Q
-			if flag == 0:
+				# aplicar formula Q
 				sarsa(state, prevAction, nextAction, r, newState)
 		else:
-			qLearning(state, prevAction, r, newState)
+			if flag == 0:
+				qLearning(state, prevAction, r, newState)
 
 		# actualizar
 		state = newState
