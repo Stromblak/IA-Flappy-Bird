@@ -3,12 +3,12 @@ from flappy import *
 import json
 
 Q = {}  # Diccionario para almacenar Q's, guarda un par estado y accion (Q es el valor)
-a = 0.7  # alfa: Tasa de aprendizaje #0.7 0.8 0.9
-g = 0.95  # gamma: Factor de descuento #0.95 1
-e = 0  # epsilon: para e-greedy #0 0.1
+a = 0.8  # alfa: Tasa de aprendizaje #0.7 0.8 0.9
+g = 1  # gamma: Factor de descuento #0.95 1
+e = 0.1  # epsilon: para e-greedy #0 0.1
 
 try:
-    with open("./sarsaqlearning/qqq.json", "r") as file:
+    with open("./sarsaqlearning/s.json", "r") as file:
         Q_loaded = json.load(file)
     Q = {eval(key): value for key, value in Q_loaded.items()}
 except FileNotFoundError:
@@ -17,15 +17,47 @@ except FileNotFoundError:
 
 def saveqvalues():
     Q_converted = {str(key): value for key, value in Q.items()}
-    with open("./sarsaqlearning/qqq.json", "w") as file:
+    with open("./sarsaqlearning/s.json", "w") as file:
         json.dump(Q_converted, file, indent=4, ensure_ascii=False)
 
 
 # el estado actual del juego
 # altura del pajaro y las pipes, dividido por 10 para tener menos estados,
 # ya que no importa si la altura es unos px mas o menos
-def getState(ydiff, xdiff, vel):
-    state = (ydiff // 10, int(xdiff // 10), vel)
+def getState(y, pipe, vel):
+    pipe0, pipe1 = pipe[0], pipe[1]
+    if 57 - pipe[0]["x"] >= 50:
+        pipe0 = pipe[1]
+        if len(pipe) > 2:
+            pipe1 = pipe[2]
+
+    xdiff = pipe0["x"] - 57
+    ydiff = pipe0["y"] - y
+    if -50 < xdiff <= 0:
+        y1 = pipe1["y"] - y
+    else:
+        y1 = 0
+
+    # if xdiff < -40:
+    #     xdiff = int(xdiff)
+    # elif xdiff < 140:
+    #     xdiff = int(xdiff) - (int(xdiff) % 10)
+    # else:
+    #     xdiff = int(xdiff) - (int(xdiff) % 70)
+
+    # if -180 < ydiff < 180:
+    #     ydiff = int(ydiff) - (int(ydiff) % 10)
+    # else:
+    #     ydiff = int(ydiff) - (int(ydiff) % 60)
+
+    # if -180 < y1 < 180:
+    #     y1 = int(y1) - (int(y1) % 10)
+    # else:
+    #     y1 = int(y1) - (int(y1) % 60)
+    ydiff = int(ydiff // 10)
+    xdiff = int(xdiff // 10)
+    y1 = int(y1 // 10)
+    state = (ydiff, xdiff, vel, y1)
     return state
 
 
@@ -78,6 +110,10 @@ def qLearning(state, prevAction, R, newState):
     Q[(state, prevAction)] = newQ
 
 
-def save_epi_scr(episode, score):
-    with open("datas.txt", "a") as file:
-        file.write(f"{episode} {score}\n")
+def savescr(score):
+    try:
+        with open("./sarsaqlearning/scores.txt", "a") as file:
+            file.write(f"{score}\n")
+    except FileNotFoundError:
+        with open("./sarsaqlearning/scores.txt", "w") as file:
+            file.write(f"{score}\n")
