@@ -3,7 +3,7 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from red import *
+from red import red
 
 SONIDO = False
 
@@ -19,34 +19,34 @@ IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 PLAYERS_LIST = (
 	# red bird
 	(
-		'../assets/sprites/redbird-upflap.png',
-		'../assets/sprites/redbird-midflap.png',
-		'../assets/sprites/redbird-downflap.png',
+		'../../assets/sprites/redbird-upflap.png',
+		'../../assets/sprites/redbird-midflap.png',
+		'../../assets/sprites/redbird-downflap.png',
 	),
 	# blue bird
 	(
-		'../assets/sprites/bluebird-upflap.png',
-		'../assets/sprites/bluebird-midflap.png',
-		'../assets/sprites/bluebird-downflap.png',
+		'../../assets/sprites/bluebird-upflap.png',
+		'../../assets/sprites/bluebird-midflap.png',
+		'../../assets/sprites/bluebird-downflap.png',
 	),
 	# yellow bird
 	(
-		'../assets/sprites/yellowbird-upflap.png',
-		'../assets/sprites/yellowbird-midflap.png',
-		'../assets/sprites/yellowbird-downflap.png',
+		'../../assets/sprites/yellowbird-upflap.png',
+		'../../assets/sprites/yellowbird-midflap.png',
+		'../../assets/sprites/yellowbird-downflap.png',
 	),
 )
 
 # list of backgrounds
 BACKGROUNDS_LIST = (
-	'../assets/sprites/background-day.png',
-	'../assets/sprites/background-night.png',
+	'../../assets/sprites/background-day.png',
+	'../../assets/sprites/background-night.png',
 )
 
 # list of pipes
 PIPES_LIST = (
-	'../assets/sprites/pipe-green.png',
-	'../assets/sprites/pipe-red.png',
+	'../../assets/sprites/pipe-green.png',
+	'../../assets/sprites/pipe-red.png',
 )
 
 xrange = range
@@ -60,24 +60,24 @@ def main2():
 
 	# numbers sprites for score display
 	IMAGES['numbers'] = (
-		pygame.image.load('../assets/sprites/0.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/1.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/2.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/3.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/4.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/5.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/6.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/7.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/8.png').convert_alpha(),
-		pygame.image.load('../assets/sprites/9.png').convert_alpha()
+		pygame.image.load('../../assets/sprites/0.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/1.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/2.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/3.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/4.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/5.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/6.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/7.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/8.png').convert_alpha(),
+		pygame.image.load('../../assets/sprites/9.png').convert_alpha()
 	)
 
 	# game over sprite
-	IMAGES['gameover'] = pygame.image.load('../assets/sprites/gameover.png').convert_alpha()
+	IMAGES['gameover'] = pygame.image.load('../../assets/sprites/gameover.png').convert_alpha()
 	# message sprite for welcome screen
-	IMAGES['message'] = pygame.image.load('../assets/sprites/message.png').convert_alpha()
+	IMAGES['message'] = pygame.image.load('../../assets/sprites/message.png').convert_alpha()
 	# base (ground) sprite
-	IMAGES['base'] = pygame.image.load('../assets/sprites/base.png').convert_alpha()
+	IMAGES['base'] = pygame.image.load('../../assets/sprites/base.png').convert_alpha()
 
 	# sounds
 	if 'win' in sys.platform:
@@ -85,11 +85,11 @@ def main2():
 	else:
 		soundExt = '.ogg'
 
-	SOUNDS['die']    = pygame.mixer.Sound('../assets/audio/die' + soundExt)
-	SOUNDS['hit']    = pygame.mixer.Sound('../assets/audio/hit' + soundExt)
-	SOUNDS['point']  = pygame.mixer.Sound('../assets/audio/point' + soundExt)
-	SOUNDS['swoosh'] = pygame.mixer.Sound('../assets/audio/swoosh' + soundExt)
-	SOUNDS['wing']   = pygame.mixer.Sound('../assets/audio/wing' + soundExt)
+	SOUNDS['die']    = pygame.mixer.Sound('../../assets/audio/die' + soundExt)
+	SOUNDS['hit']    = pygame.mixer.Sound('../../assets/audio/hit' + soundExt)
+	SOUNDS['point']  = pygame.mixer.Sound('../../assets/audio/point' + soundExt)
+	SOUNDS['swoosh'] = pygame.mixer.Sound('../../assets/audio/swoosh' + soundExt)
+	SOUNDS['wing']   = pygame.mixer.Sound('../../assets/audio/wing' + soundExt)
 
 	# select random background sprites
 	randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
@@ -163,21 +163,12 @@ def main2():
 
 
 # cosa principal
-distInicio = -0
-distancia = 0
-tubFin = 300
-
-CONTADOR = 20
-CONTMAX = 40
-AUX = 1
-
+tubFin = 1000
 
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
-	FPSCLOCK.tick(FPS)
 
-	global CONTADOR
-	CONTADOR = 20
+	FPSCLOCK.tick(FPS)
 
 	playerIndexGen = cycle([0, 1, 2, 1])
 	playerx = [ int(SCREENWIDTH * 0.2) for i in range(pajaros)]
@@ -186,25 +177,18 @@ def mainGame(pajaros, listaPajaros):
 	basex = 0
 	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
 
-	# get 2 new pipes to add to upperPipes lowerPipes list
-	newPipe1 = getRandomPipe()
-	newPipe2 = getRandomPipe()
 
-	# list of upper pipes
-	upperPipes = [
-		{'x': SCREENWIDTH + 200 + distInicio, 'y': newPipe1[0]['y']},
-		{'x': SCREENWIDTH + 200 + distInicio+ ((SCREENWIDTH + distancia ) / 2), 'y': newPipe2[0]['y']},
-	]
+	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
+	upperPipes = [{'x': SCREENWIDTH + 200, 'y': gapY - IMAGES['pipe'][0].get_height()}]
+	lowerPipes = [{'x': SCREENWIDTH + 200, 'y': gapY + PIPEGAPSIZE}]
 
-	# list of lowerpipe
-	lowerPipes = [
-		{'x': SCREENWIDTH + 200 + distInicio, 'y': newPipe1[1]['y']},
-		{'x': SCREENWIDTH + 200 + distInicio+ ((SCREENWIDTH + distancia) / 2 ), 'y': newPipe2[1]['y']},
-	]
+	newPipe = getRandomPipe(lowerPipes)
+	upperPipes.append(newPipe[0])
+	lowerPipes.append(newPipe[1])
 
-	dt =  FPSCLOCK.tick(FPS)/1000.0
+	dt = FPSCLOCK.tick(FPS)/1000.0
 	pipeVelX = -128 * dt
-	
+
 	# player velocity, max velocity, downward acceleration, acceleration on flap
 	playerVelY    =  [-9 for i in range(pajaros)]   # player's velocity along Y, default same as playerFlapped
 	playerMaxVelY =  10   # max vel along Y, max descend speed
@@ -260,8 +244,7 @@ def mainGame(pajaros, listaPajaros):
 				muertos.add(i)
 				distMuerte[i] = dist
 
-			fitness[i] += 1
-
+			fitness[i] = score
 			# rotate the player
 			if playerRot[i] > -90:
 				playerRot[i] -= playerVelRot
@@ -278,7 +261,7 @@ def mainGame(pajaros, listaPajaros):
 
 
 		restantes -= muertos
-		if not len(restantes) or score == tubFin:
+		if len(restantes) <= 0 or score == tubFin:
 			return fitness, distMuerte
 		
 		# check for score
@@ -324,7 +307,7 @@ def mainGame(pajaros, listaPajaros):
 
 		# add new pipe when first pipe is about to touch left of screen
 		if 3 > len(upperPipes) > 0 and 0 < upperPipes[0]['x'] < 5:
-			newPipe = getRandomPipe()
+			newPipe = getRandomPipe(lowerPipes)
 			upperPipes.append(newPipe[0])
 			lowerPipes.append(newPipe[1])
 
@@ -356,37 +339,17 @@ def mainGame(pajaros, listaPajaros):
 			SCREEN.blit(playerSurface, (playerx[i], playery[i]))
 
 		pygame.display.update()
-		FPSCLOCK.tick(FPS)
 
-def getRandomPipe():
-	"""returns a randomly generated pipe"""
-	# y of gap between upper and lower pipe
-	global AUX, CONTMAX, CONTADOR
-
+def getRandomPipe(lowerPipes):
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
-
-	CONTADOR = (CONTADOR + 1)%CONTMAX
-	if CONTADOR > CONTMAX/2:
-		AUX = (AUX + 1)%2
-
-		if AUX:
-			gapY = 0
-				
-		else:
-			gapY = int(BASEY * 0.6 - PIPEGAPSIZE)
-
-
-	# gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()
-	pipeX = SCREENWIDTH + 10 + distancia
-
+	pipeX = lowerPipes[-1]["x"] + SCREENWIDTH/2 + 4
 
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
 	]
-
 
 
 def checkCrash(player, upperPipes, lowerPipes):
@@ -402,8 +365,7 @@ def checkCrash(player, upperPipes, lowerPipes):
 		distMuerte = 2000
 		return [True, True], distMuerte
 	
-	elif player['y'] + player['h'] <= 0:
-		
+	elif player['y'] < 0:
 		distMuerte = 1000
 		return [True, True], distMuerte
 	

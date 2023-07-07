@@ -28,19 +28,19 @@ def procesarEntrada(tuberias, player):
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		diff_Arriba = (uPipe["y"] + tuberias["h"]           - player["y"]              ) / 260.0
-		diff_Abajo  = (lPipe["y"]                           - player["y"] + player["h"]) / 262.48
-		diff_Final  = (min(149, uPipe["x"]) + tuberias["w"] - player["x"]              ) / 149.0
+		delta_Arriba = (uPipe["y"] + tuberias["h"]           - player["y"]              ) / (404.48 - 80.0)
+		delta_Abajo  = (lPipe["y"]                           - player["y"] + player["h"]) / (322.0 - player["h"])
+		delta_Final  = (min(148, uPipe["x"]) + tuberias["w"] - player["x"]              ) / (148.0)
 
-		entrada.append( diff_Abajo )
+		entrada.append( delta_Abajo )
 
 		if not siguiente:
-			entrada.append(diff_Final)
+			entrada.append( delta_Final )
 			siguiente = 1
+			break
 			continue
 
 		break
-
 
 	if BIAS[0]:
 		entrada.insert(0, 1)
