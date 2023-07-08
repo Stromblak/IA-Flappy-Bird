@@ -194,21 +194,6 @@ def showWelcomeAnimation():
 					'playerIndexGen': playerIndexGen,
 				}
 
-def load_episode():
-    try:
-        with open('data.txt', 'r') as file:
-            lines = file.readlines()
-            if lines:
-                last_line = lines[-1].strip()
-                episode = int(last_line.split()[0])
-                return episode
-    except FileNotFoundError:
-        with open('data.txt', 'w') as file:
-            pass
-    return 0
-
-episode = 0#load_episode()
-
 # cosa principal
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
@@ -251,14 +236,14 @@ def mainGame(movementInfo):
 
 	ciclo = 0
 	
-	algoritmo = 0 # 0 Qlearning, 1 SARSA
+	algoritmo = 1 # 0 Qlearning, 1 SARSA
 	i = 0 # indice de la tuberia
 	saltar = False # accion a tomar
 	r = 0 # reward
 
 	# Inicializar SARSA/Q-Learning con S
 	ydiff = lowerPipes[i]['y'] - playery # altura del tubo inferior - agente
-	state = getState(ydiff,lowerPipes[i]['x'],playerVelY)
+	state = getState(playery,lowerPipes,playerVelY)
 
 	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
 	if algoritmo:
@@ -277,7 +262,7 @@ def mainGame(movementInfo):
 					saltar = True
 
 		# QLearning: elegir A de un S (con epsilon-greedy)
-		if algoritmo == 0:
+		if algoritmo == 0: 
 			flag = 0
 
 			if lowerPipes[i]['x'] > 250:
@@ -288,10 +273,9 @@ def mainGame(movementInfo):
 
 			# elegir A de un S (con epsilon-greedy)
 			if flag==0:
-				if ydiff > 100: prevAction = False
-				#elif lowerPipes[i]['x'] < 100 and ydiff < 2: prevAction = True
-				#elif lowerPipes[i]['x'] < 105 and ydiff < 0: prevAction = True
-				#elif lowerPipes[i]['x'] < 50 and ydiff > 40: prevAction = False 
+				if ydiff > 45: prevAction = False
+				#elif lowerPipes[i]['x'] < 150 and ydiff < 40: prevAction = True
+				#elif lowerPipes[i]['x'] < 90 and ydiff > 0: prevAction = False
 				else: prevAction = egreedy(state)
 
         # ejecutar A
@@ -331,32 +315,36 @@ def mainGame(movementInfo):
 		# cambiar indice de pipes
 		mini = None
 		minval = 10000  
-
-		for i in range(len(lowerPipes)):
-			if lowerPipes[i]['x'] > 10 and lowerPipes[i]['x'] < minval:
-				minval = lowerPipes[i]['x']
-				mini = i
+		
+		for j in range(0, len(lowerPipes), 1):
+			if lowerPipes[j]['x'] > 10 and lowerPipes[j]['x'] < minval:
+				minval = lowerPipes[j]['x']
+				mini = j
 			if mini is not None:
 				i = mini
 
 		ydiff = lowerPipes[i]['y']-playery
 		# observar R, S'
-		newState = getState(ydiff,lowerPipes[i]['x'],playerVelY)
-		r = 0
-			
+		newState = getState(playery,lowerPipes,playerVelY)
+		if ydiff > 35 and ydiff < 45: r+=0.5
+		else: r-=0.1
+
 		#crash
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
 		if crashTest[0]:
 			r = -1000
-			if algoritmo: sarsa(state, prevAction, nextAction, r, newState)
-			else: qLearning(state, prevAction, r, newState)
+			if algoritmo: 
+				sarsa(state, prevAction, nextAction, r, newState)
+				sarsa(prevState, prevprevact, prevAction, r, state)
+			else: 
+				qLearning(state, prevAction, r, newState)
+				qLearning(prevState, prevprevact, r, state)
+
 			saveqvalues()
 			r = 0
-			global episode
-			episode+=1
-			#save_epi_scr(episode, score)
-			print(episode, score)
+			savescr(score)
+			print(score)
 			return {
 				'y': playery,
 				'groundCrash': crashTest[1],
@@ -374,7 +362,7 @@ def mainGame(movementInfo):
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 				score += 1
-				#r = 5
+				r = 5
 				#SOUNDS['point'].play()
 		
 		if algoritmo:
@@ -389,8 +377,7 @@ def mainGame(movementInfo):
 
 			# elegir A de un S (con epsilon-greedy)
 			if flag == 0:
-				if ydiff > 40: nextAction = False
-				elif lowerPipes[i]['x'] < 100 and ydiff < 40: nextAction = True
+				if ydiff > 45: nextAction = False
 				else: nextAction = egreedy(newState)
 
 				# aplicar formula Q
@@ -400,6 +387,8 @@ def mainGame(movementInfo):
 				qLearning(state, prevAction, r, newState)
 
 		# actualizar
+		prevState= state
+		prevprevact = prevAction 
 		state = newState
 		if algoritmo:
 			prevAction = nextAction
@@ -433,7 +422,8 @@ def mainGame(movementInfo):
 		if len(upperPipes) > 0 and upperPipes[0]['x'] < -IMAGES['pipe'][0].get_width():
 			upperPipes.pop(0)
 			lowerPipes.pop(0)
-
+			if i == 1: i = 0
+			elif i == 2: i = 1
 		# draw sprites
 		SCREEN.blit(IMAGES['background'], (0,0))
 
@@ -454,7 +444,7 @@ def mainGame(movementInfo):
 		SCREEN.blit(playerSurface, (playerx, playery))
 
 		pygame.display.update()
-		FPSCLOCK.tick(FPS)
+		#FPSCLOCK.tick(FPS)
 
 
 def showGameOverScreen(crashInfo):
