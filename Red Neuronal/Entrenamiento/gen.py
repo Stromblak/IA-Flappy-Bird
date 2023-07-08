@@ -19,7 +19,7 @@ DELTA      = 0.02
 
 WMIN, WMAX = -1, 1
 RANDOM     = True
-USARPESOS  = False
+USARPESOS  = 1
 MINFITNESS = 1000
 
 
@@ -47,10 +47,9 @@ class Pajaro:
 						self.pesos[i][-1][k] = random.uniform(WMIN, WMAX)
 
 	def setFitness(self, fitness, dist):
-		self.fitness = self.fitness*0.9 + fitness
+		self.fitness = self.fitness*0.5 + fitness
 		self.distMuerte = dist
 		self.score = fitness
-
 		if self.score >= MINFITNESS:
 			self.victorias += 1
 
@@ -70,13 +69,14 @@ class Pajaro:
 				for k in range(NODOS[i-1]):
 					self.pesos[i][j][k] = random.choice([p1.pesos[i][j][k], p2.pesos[i][j][k]])
 		
-		self.fitness = min([p1.fitness, p2.fitness])
+		self.fitness = random.choice([p1.fitness, p2.fitness])
 		self.mutar()
 	
 	def guardar(self, numero):
-		if self.victorias <= 1:
+		if self.score < MINFITNESS:
 			return
 		
+		self.victorias += 1
 		f = open(f"pesos/pesos{numero}-{self.score}-{self.victorias}.txt", 'w')
 
 		f.write( " ".join( [str(n) for n in BIAS]) + "\n")
@@ -88,6 +88,15 @@ class Pajaro:
 
 		f.close()	
 
+	def cargar(self, archivo):
+		skip = 2
+		self.pesos = [ [] ]
+		for i in range(1, CAPAS):
+			self.pesos.append( np.loadtxt(archivo, dtype=float, skiprows=skip, max_rows=NODOS[i]) )
+
+			if self.pesos[-1].ndim == 1:
+				self.pesos[-1] = [np.loadtxt(archivo, dtype=float, skiprows=skip, max_rows=NODOS[i])]
+			skip += NODOS[i]
 
 class AlgGenetico():
 	def __init__(self):
@@ -96,9 +105,9 @@ class AlgGenetico():
 		self.numPajaro = 0
 		self.pajaros = [ Pajaro() for i in range(POBLACION) ]
 		if USARPESOS:
-			dir_list = os.listdir("./pesos")
+			dir_list = os.listdir("./pesos2")
 			for i in range(min(len(dir_list), POBLACION)):
-				self.pajaros[i].cargar("./pesos/" + dir_list[i])
+				self.pajaros[i].cargar("./pesos2/" + dir_list[i])
 		
 		self.fitnessMaxGen = []
 		self.fitnessPromedioGen = []
