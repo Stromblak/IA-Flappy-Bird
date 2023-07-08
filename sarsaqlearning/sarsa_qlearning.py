@@ -8,7 +8,7 @@ g = 1  # gamma: Factor de descuento #0.95 1
 e = 0.1  # epsilon: para e-greedy #0 0.1
 
 try:
-    with open("./sarsaqlearning/s.json", "r") as file:
+    with open("./sarsaqlearning/qq.json", "r") as file:
         Q_loaded = json.load(file)
     Q = {eval(key): value for key, value in Q_loaded.items()}
 except FileNotFoundError:
@@ -17,7 +17,7 @@ except FileNotFoundError:
 
 def saveqvalues():
     Q_converted = {str(key): value for key, value in Q.items()}
-    with open("./sarsaqlearning/s.json", "w") as file:
+    with open("./sarsaqlearning/qq.json", "w") as file:
         json.dump(Q_converted, file, indent=4, ensure_ascii=False)
 
 
@@ -112,8 +112,8 @@ def qLearning(state, prevAction, R, newState):
 
 def savescr(score):
     try:
-        with open("./sarsaqlearning/scores.txt", "a") as file:
+        with open("./sarsaqlearning/scoreqq.txt", "a") as file:
             file.write(f"{score}\n")
     except FileNotFoundError:
-        with open("./sarsaqlearning/scores.txt", "w") as file:
+        with open("./sarsaqlearning/scoreqq.txt", "w") as file:
             file.write(f"{score}\n")

@@ -236,7 +236,7 @@ def mainGame(movementInfo):
 
 	ciclo = 0
 	
-	algoritmo = 1 # 0 Qlearning, 1 SARSA
+	algoritmo = 0 # 0 Qlearning, 1 SARSA
 	i = 0 # indice de la tuberia
 	saltar = False # accion a tomar
 	r = 0 # reward
@@ -395,21 +395,23 @@ def mainGame(movementInfo):
 
 
 		# movimiento tuberias	----------------------------------------------------------
-		movimiento = False
+		movimiento = True
 		if movimiento:
 			if not ciclo % FPS:
 				delta = random.uniform(-1, 1)*pipeVelX/2
 			ciclo += 1
 
+			# u: 0 + int(BASEY * 0.2) + pipeHeight = 80 - 320
+			# l: int(BASEY * 0.6) + int(BASEY * 0.2) = 142 + 80 + 100
 			for uPipe, lPipe in zip(upperPipes, lowerPipes):
-				if delta > 0 and lPipe['y'] + delta <= 350:
+				if delta > 0 and lPipe['y'] + delta <= 322:
 					uPipe['y'] += delta
 					lPipe['y'] += delta
 
-				if delta < 0 and uPipe['y'] + delta >= -275:
+				if delta < 0 and uPipe['y'] + delta >= -260:
 					uPipe['y'] += delta
 					lPipe['y'] += delta			
-
+				
 		
 
 		# add new pipe when first pipe is about to touch left of screen
@@ -444,7 +446,7 @@ def mainGame(movementInfo):
 		SCREEN.blit(playerSurface, (playerx, playery))
 
 		pygame.display.update()
-		#FPSCLOCK.tick(FPS)
+		FPSCLOCK.tick(FPS)
 
 
 def showGameOverScreen(crashInfo):
@@ -530,7 +532,7 @@ def getRandomPipe():
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()	
 	pipeX = SCREENWIDTH + 10
-
+	print(gapY,pipeHeight,PIPEGAPSIZE,int(BASEY * 0.2),int(BASEY * 0.6 - PIPEGAPSIZE))
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
