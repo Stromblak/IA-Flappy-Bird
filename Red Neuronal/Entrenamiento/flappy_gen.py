@@ -164,6 +164,7 @@ def main2():
 
 # cosa principal
 tubFin = 10000
+MOVIMIENTO = 1
 
 def mainGame(pajaros, listaPajaros):
 	score = playerIndex = loopIter = 0
@@ -209,6 +210,9 @@ def mainGame(pajaros, listaPajaros):
 	playerW = IMAGES['player'][0].get_width()
 	playerH = IMAGES['player'][0].get_height()
 
+	ciclo = 0
+	delta = pipeVelX/4 * MOVIMIENTO
+
 	while True:
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -226,7 +230,7 @@ def mainGame(pajaros, listaPajaros):
 		muertos = set()
 		for i in restantes:
 			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
-			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW, "delta": delta / (pipeVelX/4)}
 
 			# ia
 			if red(tuberia, pajaro, listaPajaros[i]):
@@ -288,20 +292,17 @@ def mainGame(pajaros, listaPajaros):
 			
 
 		# movimiento tuberias	----------------------------------------------------------
-		movimiento = False
-		if movimiento:
-			if not ciclo % FPS:
-				delta = random.uniform(-1, 1)*pipeVelX/2
-			ciclo += 1
+		if not (ciclo % FPS):
+			delta *= -1
+		ciclo += 1
+		for uPipe, lPipe in zip(upperPipes, lowerPipes):
+			if delta > 0 and lPipe['y'] + delta <= 322:
+				uPipe['y'] += delta
+				lPipe['y'] += delta
 
-			for uPipe, lPipe in zip(upperPipes, lowerPipes):
-				if delta > 0 and lPipe['y'] + delta <= 350:
-					uPipe['y'] += delta
-					lPipe['y'] += delta
-
-				if delta < 0 and uPipe['y'] + delta >= -275:
-					uPipe['y'] += delta
-					lPipe['y'] += delta			
+			if delta < 0 and uPipe['y'] + delta >= -260:
+				uPipe['y'] += delta
+				lPipe['y'] += delta
 
 		
 

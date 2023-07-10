@@ -1,7 +1,7 @@
 import numpy as np
 
 BIAS  = [1, 1, 0]
-NODOS = [3 + BIAS[0], 4 + BIAS[1], 1]
+NODOS = [4 + BIAS[0], 4 + BIAS[1], 1]
 CAPAS = len(NODOS)
 
 def sig(x):
@@ -10,23 +10,16 @@ def sig(x):
 def procesarEntrada(tuberias, player):
 	entrada = [player["velY"] / 10.0]
 
-	siguiente = 0
 	for uPipe, lPipe in tuberias["tuberias"]:
 		if uPipe["x"] + tuberias["w"] <= player["x"]:
 			continue
 
-		delta_Arriba = (uPipe["y"] + tuberias["h"]           - player["y"]              ) / (404.48 - 80.0)
 		delta_Abajo  = (lPipe["y"]                           - player["y"] + player["h"]) / (322.0 - player["h"])
 		delta_Final  = (min(148, uPipe["x"]) + tuberias["w"] - player["x"]              ) / (148.0)
 
 		entrada.append( delta_Abajo )
-
-		if not siguiente:
-			entrada.append( delta_Final )
-			siguiente = 1
-			break
-			continue
-
+		entrada.append( delta_Final )
+		entrada.append( tuberias["delta"] )
 		break
 
 	if BIAS[0]:

@@ -3,7 +3,6 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from red import red
 
 SONIDO = False
 
@@ -165,8 +164,9 @@ def main2():
 # cosa principal
 tubFin = 10000
 
-def mainGame(pajaros, listaPajaros):
+def mainGame(nets):
 	score = playerIndex = loopIter = 0
+	pajaros = len(nets)
 
 	FPSCLOCK.tick(FPS)
 
@@ -226,15 +226,28 @@ def mainGame(pajaros, listaPajaros):
 		muertos = set()
 		for i in restantes:
 			pajaro = {"x": playerx[i], "y": playery[i], "velY": playerVelY[i], "h": playerH, "w": playerW}
-			tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+			tuberias = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+
+			entrada = [pajaro["velY"] / 10.0]
+			for uPipe, lPipe in tuberias["tuberias"]:
+				if uPipe["x"] + tuberias["w"] <= pajaro["x"]:
+					continue
+
+				delta_Abajo  = (lPipe["y"]                           - pajaro["y"] + pajaro["h"]) / (322.0 - pajaro["h"])
+				delta_Final  = (min(148, uPipe["x"]) + tuberias["w"] - pajaro["x"]              ) / (148.0)
+
+				entrada.append( delta_Abajo )
+				entrada.append( delta_Final )
+				break
 
 			# ia
-			if red(tuberia, pajaro, listaPajaros[i]):
+			if nets[i].activate(entrada)[0] >= 0.5:
 				if playery[i] > -2 * IMAGES['player'][0].get_height():
 					playerVelY[i] = playerFlapAcc
 					playerFlapped[i] = True
 					if SONIDO:
 						SOUNDS['wing'].play()	
+
 
 			# check for crash here
 			crashTest, dist = checkCrash({'x': playerx[i], 'y': playery[i], 'index': playerIndex},

@@ -3,8 +3,8 @@ import random
 import sys
 import pygame
 from pygame.locals import *
+import neat
 
-import red
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -183,7 +183,7 @@ def showWelcomeAnimation():
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-MOVIMIENTO = 1
+
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']
@@ -191,6 +191,7 @@ def mainGame(movementInfo):
 
 	basex = movementInfo['basex']
 	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
+
 
 	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
 	upperPipes = [{'x': SCREENWIDTH + 200, 'y': gapY - IMAGES['pipe'][0].get_height()}]
@@ -218,9 +219,6 @@ def mainGame(movementInfo):
 	tuberiaH = IMAGES['pipe'][0].get_height()
 	playerW = IMAGES['player'][0].get_width()
 	playerH = IMAGES['player'][0].get_height()
-
-	ciclo = 0
-	delta = pipeVelX/4 * MOVIMIENTO
 
 	while True:
 		for event in pygame.event.get():
@@ -293,20 +291,6 @@ def mainGame(movementInfo):
 			uPipe['x'] += pipeVelX
 			lPipe['x'] += pipeVelX
 
-
-		if not (ciclo % FPS):
-			delta *= -1
-		ciclo += 1
-		for uPipe, lPipe in zip(upperPipes, lowerPipes):
-			if delta > 0 and lPipe['y'] + delta <= 322:
-				uPipe['y'] += delta
-				lPipe['y'] += delta
-
-			if delta < 0 and uPipe['y'] + delta >= -260:
-				uPipe['y'] += delta
-				lPipe['y'] += delta
-			
-
 		# add new pipe when first pipe is about to touch left of screen
 		if 3 > len(upperPipes) > 0 and 0 < upperPipes[0]['x'] < 5:
 			newPipe = getRandomPipe(lowerPipes)
@@ -338,7 +322,6 @@ def mainGame(movementInfo):
 		SCREEN.blit(playerSurface, (playerx, playery))
 
 		pygame.display.update()
-		FPSCLOCK.tick(FPS)
 
 
 def showGameOverScreen(crashInfo):
