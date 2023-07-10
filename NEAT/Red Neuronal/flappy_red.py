@@ -3,9 +3,9 @@ import random
 import sys
 import pygame
 from pygame.locals import *
-from sarsa_qlearning import *
 
-sys.setrecursionlimit(10000)
+import red
+
 FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
@@ -49,10 +49,7 @@ PIPES_LIST = (
 )
 
 
-try:
-	xrange
-except NameError:
-	xrange = range
+xrange = range
 
 
 def main():
@@ -156,9 +153,19 @@ def showWelcomeAnimation():
 	playerShmVals = {'val': 0, 'dir': 1}
 
 	while True:
-		
+		for event in pygame.event.get():
+			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+				pygame.quit()
+				sys.exit()
+			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+				# make first flap sound and return values for mainGame
+				SOUNDS['wing'].play()
+				return {
+					'playery': playery + playerShmVals['val'],
+					'basex': basex,
+					'playerIndexGen': playerIndexGen,
+				}
 
-		#mover debajo del for si no se quiere reinicio automatico
 		# adjust playery, playerIndex, basex
 		if (loopIter + 1) % 5 == 0:
 			playerIndex = next(playerIndexGen)
@@ -175,26 +182,8 @@ def showWelcomeAnimation():
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
-		#reinicio automatico
-		return {
-			'playery': playery + playerShmVals['val'],
-			'basex': basex,
-			'playerIndexGen': playerIndexGen,
-		}
-		for event in pygame.event.get():
-			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-				pygame.quit()
-				sys.exit()
-			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-				# make first flap sound and return values for mainGame
-				SOUNDS['wing'].play()
-				return {
-					'playery': playery + playerShmVals['val'],
-					'basex': basex,
-					'playerIndexGen': playerIndexGen,
-				}
 
-# cosa principal
+
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']
@@ -203,22 +192,14 @@ def mainGame(movementInfo):
 	basex = movementInfo['basex']
 	baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
 
-	# get 2 new pipes to add to upperPipes lowerPipes list
-	newPipe1 = getRandomPipe()
-	newPipe2 = getRandomPipe()
-	
 
-	# list of upper pipes
-	upperPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[0]['y']},
-	]
+	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
+	upperPipes = [{'x': SCREENWIDTH + 200, 'y': gapY - IMAGES['pipe'][0].get_height()}]
+	lowerPipes = [{'x': SCREENWIDTH + 200, 'y': gapY + PIPEGAPSIZE}]
 
-	# list of lowerpipe
-	lowerPipes = [
-		{'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
-		{'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
-	]
+	newPipe = getRandomPipe(lowerPipes)
+	upperPipes.append(newPipe[0])
+	lowerPipes.append(newPipe[1])
 
 	dt = FPSCLOCK.tick(FPS)/1000
 	pipeVelX = -128 * dt
@@ -234,23 +215,12 @@ def mainGame(movementInfo):
 	playerFlapAcc =  -9   # players speed on flapping
 	playerFlapped = False # True when player flaps
 
-	ciclo = 0
-	
-	algoritmo = 0 # 0 Qlearning, 1 SARSA
-	i = 0 # indice de la tuberia
-	saltar = False # accion a tomar
-	r = 0 # reward
-
-	# Inicializar SARSA/Q-Learning con S
-	ydiff = lowerPipes[i]['y'] - playery # altura del tubo inferior - agente
-	state = getState(playery,lowerPipes,playerVelY)
-
-	# Inicializar SARSA, elegir A de un S (con epsilon-greedy)
-	if algoritmo:
-		prevAction = egreedy(state)
+	tuberiaW  = IMAGES['pipe'][0].get_width()
+	tuberiaH = IMAGES['pipe'][0].get_height()
+	playerW = IMAGES['player'][0].get_width()
+	playerH = IMAGES['player'][0].get_height()
 
 	while True:
-		# manual (ignorar)
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
@@ -259,92 +229,22 @@ def mainGame(movementInfo):
 				if playery > -2 * IMAGES['player'][0].get_height():
 					playerVelY = playerFlapAcc
 					playerFlapped = True
-					saltar = True
+					SOUNDS['wing'].play()
 
-		# QLearning: elegir A de un S (con epsilon-greedy)
-		if algoritmo == 0: 
-			flag = 0
+		tuberia = {"tuberias": zip(upperPipes, lowerPipes), "h": tuberiaH, "w": tuberiaW}
+		pajaro = {"x": playerx, "y": playery, "velY": playerVelY, "h": playerH, "w": playerW}
 
-			if lowerPipes[i]['x'] > 250:
-				if ydiff > 40: prevAction = False
-				elif ydiff < 0: prevAction = True
-				else: prevAction= random.choice([True, False])
-				flag = 1
-
-			# elegir A de un S (con epsilon-greedy)
-			if flag==0:
-				if ydiff > 45: prevAction = False
-				#elif lowerPipes[i]['x'] < 150 and ydiff < 40: prevAction = True
-				#elif lowerPipes[i]['x'] < 90 and ydiff > 0: prevAction = False
-				else: prevAction = egreedy(state)
-
-        # ejecutar A
-		saltar = prevAction  
-		
-		# Movimiento IA
-		if saltar:
+		# --------------- IA ----------------
+		if red.red(tuberia, pajaro):
 			if playery > -2 * IMAGES['player'][0].get_height():
 				playerVelY = playerFlapAcc
 				playerFlapped = True
+				SOUNDS['wing'].play()				
 
-		# playerIndex basex change
-		if (loopIter + 1) % 3 == 0:
-			playerIndex = next(playerIndexGen)
-		loopIter = (loopIter + 1) % 30
-		basex = -((-basex + 100) % baseShift)
-
-		# rotate the player
-		if playerRot > -90:
-			playerRot -= playerVelRot
-		# player's movement
-		if playerVelY < playerMaxVelY and not playerFlapped:
-			playerVelY += playerAccY
-		if playerFlapped:
-			playerFlapped = False
-			saltar = False
-			playerRot = 45
-
-		playerHeight = IMAGES['player'][playerIndex].get_height()
-		playery += min(playerVelY, BASEY - playery - playerHeight)
-
-		# move pipes to left
-		for uPipe, lPipe in zip(upperPipes, lowerPipes):
-			uPipe['x'] += pipeVelX
-			lPipe['x'] += pipeVelX
-
-		# cambiar indice de pipes
-		mini = None
-		minval = 10000  
-		
-		for j in range(0, len(lowerPipes), 1):
-			if lowerPipes[j]['x'] > 10 and lowerPipes[j]['x'] < minval:
-				minval = lowerPipes[j]['x']
-				mini = j
-			if mini is not None:
-				i = mini
-
-		ydiff = lowerPipes[i]['y']-playery
-		# observar R, S'
-		newState = getState(playery,lowerPipes,playerVelY)
-		if ydiff > 35 and ydiff < 45: r+=0.5
-		else: r-=0.1
-
-		#crash
+		# check for crash here
 		crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
 							upperPipes, lowerPipes)
 		if crashTest[0]:
-			r = -1000
-			if algoritmo: 
-				sarsa(state, prevAction, nextAction, r, newState)
-				sarsa(prevState, prevprevact, prevAction, r, state)
-			else: 
-				qLearning(state, prevAction, r, newState)
-				qLearning(prevState, prevprevact, r, state)
-
-			saveqvalues()
-			r = 0
-			savescr(score)
-			print(score)
 			return {
 				'y': playery,
 				'groundCrash': crashTest[1],
@@ -356,67 +256,44 @@ def mainGame(movementInfo):
 				'playerRot': playerRot
 			}
 
-		#score
+		# check for score
 		playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
 		for pipe in upperPipes:
 			pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
 			if pipeMidPos <= playerMidPos < pipeMidPos + 4:
 				score += 1
-				r = 5
-				#SOUNDS['point'].play()
-		
-		if algoritmo:
-			# elegir A de un S (con epsilon-greedy)
-			flag = 0
+				SOUNDS['point'].play()
 
-			if lowerPipes[i]['x'] > 250:
-				if ydiff > 40: nextAction = False
-				elif ydiff < 0: nextAction = True
-				else: nextAction= random.choice([True, False])
-				flag = 1
+		# playerIndex basex change
+		if (loopIter + 1) % 3 == 0:
+			playerIndex = next(playerIndexGen)
+		loopIter = (loopIter + 1) % 30
+		basex = -((-basex + 100) % baseShift)
 
-			# elegir A de un S (con epsilon-greedy)
-			if flag == 0:
-				if ydiff > 45: nextAction = False
-				else: nextAction = egreedy(newState)
+		# rotate the player
+		if playerRot > -90:
+			playerRot -= playerVelRot
 
-				# aplicar formula Q
-				sarsa(state, prevAction, nextAction, r, newState)
-		else:
-			if flag == 0:
-				qLearning(state, prevAction, r, newState)
+		# player's movement
+		if playerVelY < playerMaxVelY and not playerFlapped:
+			playerVelY += playerAccY
+		if playerFlapped:
+			playerFlapped = False
 
-		# actualizar
-		prevState= state
-		prevprevact = prevAction 
-		state = newState
-		if algoritmo:
-			prevAction = nextAction
+			# more rotation to cover the threshold (calculated in visible rotation)
+			playerRot = 45
 
+		playerHeight = IMAGES['player'][playerIndex].get_height()
+		playery += min(playerVelY, BASEY - playery - playerHeight)
 
-		# movimiento tuberias	----------------------------------------------------------
-		movimiento = True
-		if movimiento:
-			if not ciclo % FPS:
-				delta = random.uniform(-1, 1)*pipeVelX/2
-			ciclo += 1
-
-			# u: 0 + int(BASEY * 0.2) + pipeHeight = 80 - 320
-			# l: int(BASEY * 0.6) + int(BASEY * 0.2) = 142 + 80 + 100
-			for uPipe, lPipe in zip(upperPipes, lowerPipes):
-				if delta > 0 and lPipe['y'] + delta <= 322:
-					uPipe['y'] += delta
-					lPipe['y'] += delta
-
-				if delta < 0 and uPipe['y'] + delta >= -260:
-					uPipe['y'] += delta
-					lPipe['y'] += delta			
-				
-		
+		# move pipes to left
+		for uPipe, lPipe in zip(upperPipes, lowerPipes):
+			uPipe['x'] += pipeVelX
+			lPipe['x'] += pipeVelX
 
 		# add new pipe when first pipe is about to touch left of screen
 		if 3 > len(upperPipes) > 0 and 0 < upperPipes[0]['x'] < 5:
-			newPipe = getRandomPipe()
+			newPipe = getRandomPipe(lowerPipes)
 			upperPipes.append(newPipe[0])
 			lowerPipes.append(newPipe[1])
 
@@ -424,8 +301,7 @@ def mainGame(movementInfo):
 		if len(upperPipes) > 0 and upperPipes[0]['x'] < -IMAGES['pipe'][0].get_width():
 			upperPipes.pop(0)
 			lowerPipes.pop(0)
-			if i == 1: i = 0
-			elif i == 2: i = 1
+
 		# draw sprites
 		SCREEN.blit(IMAGES['background'], (0,0))
 
@@ -465,13 +341,11 @@ def showGameOverScreen(crashInfo):
 	upperPipes, lowerPipes = crashInfo['upperPipes'], crashInfo['lowerPipes']
 
 	# play hit and die sounds
-	# SOUNDS['hit'].play()
-	# if not crashInfo['groundCrash']:
-	# 	SOUNDS['die'].play()
+	SOUNDS['hit'].play()
+	if not crashInfo['groundCrash']:
+		SOUNDS['die'].play()
 
 	while True:
-		# para que se reinicie automatico
-		main()
 		for event in pygame.event.get():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
@@ -525,14 +399,11 @@ def playerShm(playerShm):
 		playerShm['val'] -= 1
 
 
-def getRandomPipe():
-	"""returns a randomly generated pipe"""
-	# y of gap between upper and lower pipe
-	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
-	gapY += int(BASEY * 0.2)
-	pipeHeight = IMAGES['pipe'][0].get_height()	
-	pipeX = SCREENWIDTH + 10
-	print(gapY,pipeHeight,PIPEGAPSIZE,int(BASEY * 0.2),int(BASEY * 0.6 - PIPEGAPSIZE))
+def getRandomPipe(lowerPipes):
+	gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE)) + int(BASEY * 0.2)
+	pipeHeight = IMAGES['pipe'][0].get_height()
+	pipeX = lowerPipes[-1]["x"] + SCREENWIDTH/2 + 4
+
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
