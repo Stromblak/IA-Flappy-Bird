@@ -101,18 +101,18 @@ class Pajaro:
 class AlgGenetico():
 	def __init__(self):
 		main2()
-
+		self.pajaros = []
 		self.numPajaro = 0
-		self.pajaros = [ Pajaro() for i in range(POBLACION) ]
-		if USARPESOS:
-			dir_list = os.listdir("./pesos2")
-			for i in range(min(len(dir_list), POBLACION)):
-				self.pajaros[i].cargar("./pesos2/" + dir_list[i])
-		
 		self.fitnessMaxGen = []
 		self.fitnessPromedioGen = []
-
 		self.f = open("calidad.txt", "w")
+
+		self.pajaros = [ Pajaro() for i in range(POBLACION) ]
+		if USARPESOS:
+			dir_list = os.listdir("./pesos")
+			for i in range(min(len(dir_list), POBLACION)):
+				self.pajaros[i].cargar("./pesos/" + dir_list[i])
+
 
 	def ciclo(self):
 		self.calculoFitness()
