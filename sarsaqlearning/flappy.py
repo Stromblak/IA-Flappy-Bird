@@ -446,7 +446,7 @@ def mainGame(movementInfo):
 		SCREEN.blit(playerSurface, (playerx, playery))
 
 		pygame.display.update()
-		#FPSCLOCK.tick(FPS)
+		FPSCLOCK.tick(FPS)
 
 
 def showGameOverScreen(crashInfo):
