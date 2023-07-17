@@ -183,7 +183,7 @@ def showWelcomeAnimation():
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-MOVIMIENTO = 1
+MOVIMIENTO = 0
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
 	playerIndexGen = movementInfo['playerIndexGen']

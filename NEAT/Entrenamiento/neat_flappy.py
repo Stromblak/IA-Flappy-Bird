@@ -36,7 +36,7 @@ def run(config_file):
 	#p.add_reporter(stats)
 	#p.add_reporter(neat.Checkpointer(100))
 
-	winner = p.run(eval_genomes, 300)
+	winner = p.run(eval_genomes, 800)
 
 	# Display the winning genome.
 	print('\nBest genome:\n{!s}'.format(winner))

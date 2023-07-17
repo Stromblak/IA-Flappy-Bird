@@ -32,6 +32,7 @@ def procesarEntrada(tuberias, player):
 
 		entrada.append( delta_Abajo )
 		entrada.append( delta_Final )
+		entrada.append( tuberias["delta"] )
 		break
 
 	if BIAS[0]:
