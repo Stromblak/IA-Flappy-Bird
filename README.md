@@ -6,8 +6,7 @@
 
 - Q-Learning
 - SARSA
-- Redes Neuronales
-- Algoritmos geneticos
+- Redes Neuronales con algoritmo genetico
 - NEAT
 
 ## Instrucciones

@@ -8,7 +8,7 @@ g = 1  # gamma: Factor de descuento #0.95 1
 e = 0.1  # epsilon: para e-greedy #0 0.1
 
 try:
-    with open("./sarsaqlearning/qq.json", "r") as file:
+    with open("./sarsaqlearning/sss.json", "r") as file:
         Q_loaded = json.load(file)
     Q = {eval(key): value for key, value in Q_loaded.items()}
 except FileNotFoundError:
@@ -17,7 +17,7 @@ except FileNotFoundError:
 
 def saveqvalues():
     Q_converted = {str(key): value for key, value in Q.items()}
-    with open("./sarsaqlearning/qq.json", "w") as file:
+    with open("./sarsaqlearning/sss.json", "w") as file:
         json.dump(Q_converted, file, indent=4, ensure_ascii=False)
 
 
@@ -38,25 +38,9 @@ def getState(y, pipe, vel):
     else:
         y1 = 0
 
-    # if xdiff < -40:
-    #     xdiff = int(xdiff)
-    # elif xdiff < 140:
-    #     xdiff = int(xdiff) - (int(xdiff) % 10)
-    # else:
-    #     xdiff = int(xdiff) - (int(xdiff) % 70)
-
-    # if -180 < ydiff < 180:
-    #     ydiff = int(ydiff) - (int(ydiff) % 10)
-    # else:
-    #     ydiff = int(ydiff) - (int(ydiff) % 60)
-
-    # if -180 < y1 < 180:
-    #     y1 = int(y1) - (int(y1) % 10)
-    # else:
-    #     y1 = int(y1) - (int(y1) % 60)
-    ydiff = int(ydiff // 10)
-    xdiff = int(xdiff // 10)
-    y1 = int(y1 // 10)
+    ydiff = round(ydiff // 10)
+    xdiff = round(xdiff // 10)
+    y1 = round(y1 // 10)
     state = (ydiff, xdiff, vel, y1)
     return state
 
@@ -88,10 +72,10 @@ def egreedy(state):
 
 def sarsa(state, prevAction, nextAction, R, newState):
     # Q con estado actual y accion anterior
-    currentQ = Q.get((state, prevAction), 0.0)
+    currentQ = Q.get((state, prevAction), False)
 
     # Q con estado nuevo y siguiente accion
-    nextQ = Q.get((newState, nextAction), 0.0)
+    nextQ = Q.get((newState, nextAction), False)
 
     # Calcular el nuevo valor Q para el estado actual y la accion anterior (formula)
     newQ = currentQ + a * (R + g * nextQ - currentQ)
@@ -112,8 +96,8 @@ def qLearning(state, prevAction, R, newState):
 
 def savescr(score):
     try:
-        with open("./sarsaqlearning/scoreqq.txt", "a") as file:
+        with open("./sarsaqlearning/scoresss.txt", "a") as file:
             file.write(f"{score}\n")
     except FileNotFoundError:
-        with open("./sarsaqlearning/scoreqq.txt", "w") as file:
+        with open("./sarsaqlearning/scoresss.txt", "w") as file:
             file.write(f"{score}\n")

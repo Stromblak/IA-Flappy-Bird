@@ -194,6 +194,7 @@ def showWelcomeAnimation():
 					'playerIndexGen': playerIndexGen,
 				}
 
+MOVIMIENTO = 1
 # cosa principal
 def mainGame(movementInfo):
 	score = playerIndex = loopIter = 0
@@ -235,7 +236,8 @@ def mainGame(movementInfo):
 	playerFlapped = False # True when player flaps
 
 	ciclo = 0
-	
+	delta = pipeVelX/4 * MOVIMIENTO
+
 	algoritmo = 0 # 0 Qlearning, 1 SARSA
 	i = 0 # indice de la tuberia
 	saltar = False # accion a tomar
@@ -395,22 +397,20 @@ def mainGame(movementInfo):
 
 
 		# movimiento tuberias	----------------------------------------------------------
-		movimiento = True
-		if movimiento:
-			if not ciclo % FPS:
-				delta = random.uniform(-1, 1)*pipeVelX/2
-			ciclo += 1
+		if not ciclo % FPS:
+			delta *= -1
+		ciclo += 1
 
 			# u: 0 + int(BASEY * 0.2) + pipeHeight = 80 - 320
 			# l: int(BASEY * 0.6) + int(BASEY * 0.2) = 142 + 80 + 100
-			for uPipe, lPipe in zip(upperPipes, lowerPipes):
-				if delta > 0 and lPipe['y'] + delta <= 322:
-					uPipe['y'] += delta
-					lPipe['y'] += delta
+		for uPipe, lPipe in zip(upperPipes, lowerPipes):
+			if delta > 0 and lPipe['y'] + delta <= 322:
+				uPipe['y'] += delta
+				lPipe['y'] += delta
 
-				if delta < 0 and uPipe['y'] + delta >= -260:
-					uPipe['y'] += delta
-					lPipe['y'] += delta			
+			if delta < 0 and uPipe['y'] + delta >= -260:
+				uPipe['y'] += delta
+				lPipe['y'] += delta			
 				
 		
 
@@ -532,7 +532,6 @@ def getRandomPipe():
 	gapY += int(BASEY * 0.2)
 	pipeHeight = IMAGES['pipe'][0].get_height()	
 	pipeX = SCREENWIDTH + 10
-	print(gapY,pipeHeight,PIPEGAPSIZE,int(BASEY * 0.2),int(BASEY * 0.6 - PIPEGAPSIZE))
 	return [
 		{'x': pipeX, 'y': gapY - pipeHeight},  # upper pipe
 		{'x': pipeX, 'y': gapY + PIPEGAPSIZE}, # lower pipe
